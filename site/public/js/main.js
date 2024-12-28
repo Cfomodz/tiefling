@@ -270,25 +270,13 @@ function checkMouseMovement() {
 checkMouseMovement();
 
 
-// accept dragged image on body
-document.body.addEventListener('dragover', (event) => {
-    event.preventDefault();
-
-    // check size and type of the file. over 20MB: too big. only jpg and png
-    if (event.dataTransfer.items.length === 1 && event.dataTransfer.items[0].kind === 'file' && event.dataTransfer.items[0].type.match('^image/')) {
-        event.dataTransfer.dropEffect = 'copy';
-    } else {
-        event.dataTransfer.dropEffect = 'none';
-    }
-
-});
-
 /**
  * Load an image file and generate a depth map
  * @param file {File} Image file
  * @returns {Promise<*>} URL of the depth map
  */
 async function loadFile(file) {
+    document.body.classList.remove('menu-open');
     try {
         const depthCanvas = await generateDepthMap(file, 518);
 
@@ -309,65 +297,8 @@ async function loadFile(file) {
     }
 }
 
-document.body.addEventListener('drop', async (event) => {
-    event.preventDefault();
-    const file = event.dataTransfer.files[0];
-    try {
-        els.status.innerText = "Loading...";
-        const depthMapURL = await loadFile(file);
-        await load3DImage(URL.createObjectURL(file), depthMapURL);
-        els.status.innerText = "";
-    } catch (error) {
-        console.error("loading image error: ", error);
-        els.status.innerText = "error loading image";
-    }
 
-});
-
-
-if (window.location.hash === '#sbs') {
-    document.body.classList.add('sbs');
-    els.inputSbs.checked = true;
-} else {
-    // check sbs cookie
-    if (document.cookie.includes('sbs=1')) {
-        document.body.classList.add('sbs');
-        els.inputSbs.checked = true;
-        window.location.hash = 'sbs';
-    }
-}
-
-// open/close menu
-els.toggleMenu.addEventListener('click', (event) => {
-    event.preventDefault();
-    document.body.classList.toggle('menu-open');
-});
-
-// click anywhere outside menu: close it
-document.addEventListener('click', (event) => {
-    if (!event.target.closest('.controls')) {
-        document.body.classList.remove('menu-open');
-    }
-});
-
-// upload image from menu
-els.inputFile.addEventListener('change', async (event) => {
-    const file = event.target.files[0];
-    document.body.classList.remove('menu-open');
-    await loadFile(file);
-});
-
-// reload page with or without #sbs parameter
-els.inputSbs.addEventListener('change', (event) => {
-    if (event.target.checked) {
-        window.location.hash = 'sbs';
-        document.cookie = 'sbs=1';
-    } else {
-        window.location.hash = '';
-        document.cookie = 'sbs=0';
-    }
-    window.location.reload();
-});
+// events
 
 document.addEventListener('mousemove', onMouseMove);
 
@@ -397,6 +328,84 @@ document.addEventListener('touchend', () => {
     lastTouchX = null;
     lastTouchY = null;
 });
+
+
+// open/close menu
+els.toggleMenu.addEventListener('click', (event) => {
+    event.preventDefault();
+    document.body.classList.toggle('menu-open');
+});
+
+// click anywhere outside menu: close it
+document.addEventListener('click', (event) => {
+    if (!event.target.closest('.controls')) {
+        document.body.classList.remove('menu-open');
+    }
+});
+
+// upload image from menu
+els.inputFile.addEventListener('change', async (event) => {
+    const file = event.target.files[0];
+    const depthMap = await loadFile(file);
+    load3DImage(URL.createObjectURL(file), depthMap);
+});
+
+// reload page with or without #sbs parameter
+els.inputSbs.addEventListener('change', (event) => {
+    if (event.target.checked) {
+        window.location.hash = 'sbs';
+        document.cookie = 'sbs=1';
+    } else {
+        window.location.hash = '';
+        document.cookie = 'sbs=0';
+    }
+    window.location.reload();
+});
+
+
+// accept dragged image on body
+document.body.addEventListener('dragover', (event) => {
+    event.preventDefault();
+
+    // check size and type of the file. over 20MB: too big. only jpg and png
+    if (event.dataTransfer.items.length === 1 && event.dataTransfer.items[0].kind === 'file' && event.dataTransfer.items[0].type.match('^image/')) {
+        event.dataTransfer.dropEffect = 'copy';
+    } else {
+        event.dataTransfer.dropEffect = 'none';
+    }
+
+});
+
+document.body.addEventListener('drop', async (event) => {
+    event.preventDefault();
+    const file = event.dataTransfer.files[0];
+    try {
+        els.status.innerText = "Loading...";
+        const depthMapURL = await loadFile(file);
+        await load3DImage(URL.createObjectURL(file), depthMapURL);
+        els.status.innerText = "";
+    } catch (error) {
+        console.error("loading image error: ", error);
+        els.status.innerText = "error loading image";
+    }
+
+});
+
+
+// init
+
+if (window.location.hash === '#sbs') {
+    document.body.classList.add('sbs');
+    els.inputSbs.checked = true;
+} else {
+    // check sbs cookie
+    if (document.cookie.includes('sbs=1')) {
+        document.body.classList.add('sbs');
+        els.inputSbs.checked = true;
+        window.location.hash = 'sbs';
+    }
+}
+
 
 // ?input parameter? load image from URL
 const urlParams = new URLSearchParams(window.location.search);
