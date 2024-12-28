@@ -379,6 +379,7 @@ document.body.addEventListener('dragover', (event) => {
 document.body.addEventListener('drop', async (event) => {
     event.preventDefault();
     const file = event.dataTransfer.files[0];
+    document.body.classList.remove('menu-open');
     try {
         els.status.innerText = "Loading...";
         const depthMapURL = await loadFile(file);
