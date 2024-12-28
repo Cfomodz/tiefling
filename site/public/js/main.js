@@ -96,10 +96,11 @@ const postprocess = (tensor) => {
 
 /**
  * Generate a depth map from an image file using depth-anything-v2
- * @param imageFile
+ * @param imageFile {File} Image file
+ * @param inputSize 518: pretty fast, good quality. 1024: slower, better quality. higher or lower might throw error
  * @returns {Promise<HTMLCanvasElement>}
  */
-const generateDepthMap = async function(imageFile) {
+const generateDepthMap = async function(imageFile, inputSize = 518) {
     try {
         const imageUrl = URL.createObjectURL(imageFile);
 
@@ -111,8 +112,7 @@ const generateDepthMap = async function(imageFile) {
             image.src = imageUrl;
         });
 
-        // create a canvas for the resized input (518x518 is a common for depth-anything-v2)
-        const inputSize = 518;
+        // create a canvas for the resized input
         const resizeCanvas = document.createElement('canvas');
         const resizeCtx = resizeCanvas.getContext('2d');
         resizeCanvas.width = inputSize;
@@ -190,7 +190,7 @@ const els = {
 }
 
 let inputImage = null;
-let depthmapImage = null;
+let depthMapImage = null;
 
 let tiefling1, tiefling2;
 
@@ -290,7 +290,7 @@ document.body.addEventListener('dragover', (event) => {
  */
 async function loadFile(file) {
     try {
-        const depthCanvas = await generateDepthMap(file);
+        const depthCanvas = await generateDepthMap(file, 518);
 
         // convert depth map canvas to blob URL
         return await new Promise((resolve, reject) => {
@@ -313,8 +313,10 @@ document.body.addEventListener('drop', async (event) => {
     event.preventDefault();
     const file = event.dataTransfer.files[0];
     try {
+        els.status.innerText = "Loading...";
         const depthMapURL = await loadFile(file);
         await load3DImage(URL.createObjectURL(file), depthMapURL);
+        els.status.innerText = "";
     } catch (error) {
         console.error("loading image error: ", error);
         els.status.innerText = "error loading image";
@@ -398,15 +400,12 @@ document.addEventListener('touchend', () => {
 
 // ?input parameter? load image from URL
 const urlParams = new URLSearchParams(window.location.search);
-const imageUrl = urlParams.get('input');
-const depthMapUrl = urlParams.get('depthmap');
-
 
 if (urlParams.get('input')) {
     inputImage = urlParams.get('input');
     if (urlParams.get('depthmap')) {
-        depthmapImage = urlParams.get('depthmap');
-        load3DImage(inputImage, depthmapImage);
+        depthMapImage = urlParams.get('depthmap');
+        load3DImage(inputImage, depthMapImage);
     } else {
         els.status.innerText = "Loading...";
 
@@ -414,9 +413,9 @@ if (urlParams.get('input')) {
         const imageBlob = await fetch(inputImage).then(response => response.blob());
 
         // generate depth map
-        const depthMapURL = loadFile(imageBlob);
+        const depthMapURL = await loadFile(imageBlob);
 
-        load3DImage(imageBlob, depthMapURL);
+        load3DImage(URL.createObjectURL(imageBlob), depthMapURL);
 
         els.status.innerText = "";
     }
