@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>3Dpic</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="img/favicon.ico">
+    <link rel="apple-touch-icon" sizes="256x256" href="img/logo.png">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="3Dpic">
+    <style>
+
+        :root {
+            --color-text: #ccc;
+            --color-background: #000;
+            --color-main: #0085ff;
+        }
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            overflow: hidden;
+            background: var(--color-background);
+            color: var(--color-text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+        }
+
+        .containers {
+            display: grid;
+            width: 100vw;
+            height: 100vh;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .containers .inner {
+            display: grid;
+            width: 100vw;
+            height: 100vh;
+            grid-template-columns: 1fr;
+        }
+
+        .containers .inner .container {
+            overflow: hidden;
+        }
+
+        .container-2 {
+            display: none;
+        }
+
+        .sbs .containers {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+
+        }
+        .sbs .containers .inner {
+            aspect-ratio: 32 / 9;
+            width: auto;
+            height: auto;
+            max-width: 100vw;
+            max-height: 100vh;
+            /* Calculate the smaller of width/height while maintaining aspect ratio */
+            min-width: min(100vw, calc(100vh * 32/9));
+            min-height: min(100vh, calc(100vw * 9/32));
+            grid-template-columns: 1fr 1fr;
+        }
+        .sbs .containers .container {
+            width: 100%;
+            height: 100%;
+            aspect-ratio: 16 / 9;
+        }
+        .sbs .containers .container-2 {
+            display: block;
+        }
+
+        .controls {
+            position: fixed;
+            top: 0;
+            right: 0;
+        }
+
+        .controls .top {
+            position: absolute;
+            top: 0;
+            right: 0;
+            text-align: right;
+            width: 300px;
+        }
+        .controls .top .status {
+            display: inline-block;
+            margin-right: 10px;
+            vertical-align: top;
+            padding-top: 21px;
+        }
+        .controls .top .toggle-menu {
+            display: inline-block;
+            cursor: pointer;
+            color: var(--color-text);
+            padding: 20px;
+        }
+        .controls .top .toggle-menu svg {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+        }
+
+        .controls .menu {
+            display: none;
+            position: absolute;
+            top: 50px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            width: 220px;
+            padding: 0 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .controls .menu .menu-item {
+            margin: 20px 0;
+        }
+        .controls .menu .menu-item a {
+            color: var(--color-main);
+            text-decoration: none;
+        }
+        .controls .menu label {
+            padding: 10px 0;
+        }
+        .controls .menu label[for="file"] {
+            color: var(--color-main);
+            padding: 10px 0;
+        }
+
+        body.menu-open .controls .menu {
+            display: block;
+        }
+    </style>
+</head>
+
+<body >
+    <div class="containers">
+        <div class="inner">
+            <div class="container container-1"></div>
+            <div class="container container-2"></div>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <div class="top">
+            <span class="status">Drag &amp; Drop to load an image</span>
+            <a href="#" class="toggle-menu" title="Menu">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4H21V6H3V4ZM3 11H21V13H3V11ZM3 18H21V20H3V18Z"></path></svg>
+            </a>
+        </div>
+        <div class="menu">
+            <div class="menu-item">
+                <label for="file">Load Image</label>
+                <input type="file" id="file" accept="image/*" style="display: none;">
+            </div>
+            <div class="menu-item">
+                <a href="#" id="download-depthmap" target="_blank">Show Depth Map &nearr;</a>
+            </div>
+            <div class="menu-item">
+                <label for="toggle-sbs">Full Side-by-side</label>
+                <input type="checkbox" id="toggle-sbs">
+            </div>
+            <hr>
+            <div class="menu-item">
+                <a href="https://github.com/combatwombat/3dpic">Code on GitHub</a>
+            </div>
+            <div class="menu-item">
+                &copy; 2024 <a href="https://robsite.net">Robert Gerlach</a>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script src="/js/onnx/ort.min.js"></script>
+    <script src="/js/main.js" type="module"></script>
+</body>
+
+</html>

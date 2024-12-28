@@ -1,0 +1,16 @@
+{
+  "name": "3Dpic",
+  "short_name": "App",
+  "description": "3Dpic",
+  "start_url": "/",
+  "display": "fullscreen",
+  "background_color": "#000000",
+  "theme_color": "#cccccc",
+  "icons": [
+    {
+      "src": "/img/logo.png",
+      "sizes": "256x256",
+      "type": "image/png"
+    }
+  ]
+}
