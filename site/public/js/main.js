@@ -381,13 +381,13 @@ document.body.addEventListener('drop', async (event) => {
     const file = event.dataTransfer.files[0];
     document.body.classList.remove('menu-open');
     try {
-        els.status.innerText = "Loading...";
+        document.body.setAttribute('data-state', 'loading');
         const depthMapURL = await loadFile(file);
         await load3DImage(URL.createObjectURL(file), depthMapURL);
-        els.status.innerText = "";
+        document.body.setAttribute('data-state', 'idle');
     } catch (error) {
         console.error("loading image error: ", error);
-        els.status.innerText = "error loading image";
+        document.body.setAttribute('data-state', 'error');
     }
 
 });
@@ -417,7 +417,7 @@ if (urlParams.get('input')) {
         depthMapImage = urlParams.get('depthmap');
         load3DImage(inputImage, depthMapImage);
     } else {
-        els.status.innerText = "Loading...";
+        document.body.setAttribute('data-state', 'loading');
 
         // load image file from url
         const imageBlob = await fetch(inputImage).then(response => response.blob());
@@ -427,7 +427,7 @@ if (urlParams.get('input')) {
 
         load3DImage(URL.createObjectURL(imageBlob), depthMapURL);
 
-        els.status.innerText = "";
+        document.body.setAttribute('data-state', 'idle');
     }
 
 } else {
