@@ -1,4 +1,6 @@
 import { Tiefling } from '/js/tiefling.js';
+import Alpine from '/js/alpine.esm.js';
+
 
 ort.env.wasm.wasmPaths = {
     'ort-wasm-simd-threaded.wasm': '/js/onnx/ort-wasm-simd-threaded.wasm',
@@ -94,6 +96,7 @@ const postprocess = (tensor) => {
     return imageData;
 };
 
+
 /**
  * Generate a depth map from an image file using depth-anything-v2
  * @param imageFile {File} Image file
@@ -182,7 +185,6 @@ const generateDepthMap = async function(imageFile, inputSize = 518) {
 }
 
 const els = {
-    status: document.querySelector('.controls .status'),
     toggleMenu: document.querySelector('.controls .toggle-menu'),
     inputFile: document.querySelector('#file'),
     inputSbs: document.querySelector('#toggle-sbs'),
@@ -205,16 +207,24 @@ function load3DImage(image, depthMap) {
         tiefling1.destroy();
     }
 
-    tiefling1 = Tiefling('.container-1', image, depthMap, {
-        mouseXOffset: 0
-    });
+
 
     if (document.body.classList.contains('sbs')) {
+
+        tiefling1 = Tiefling('.container-1', image, depthMap, {
+            mouseXOffset: 0.3,
+            scaleY: 2
+        });
+
         if (tiefling2) {
             tiefling2.destroy();
         }
         tiefling2 = Tiefling('.container-2', image, depthMap, {
-            mouseXOffset: -0.4
+            scaleY: 2
+        });
+    } else {
+        tiefling1 = Tiefling('.container-1', image, depthMap, {
+            mouseXOffset: 0
         });
     }
 }
@@ -246,7 +256,7 @@ function checkMouseMovement() {
         }
 
         const radiusX = window.innerWidth / 4;
-        const radiusY = window.innerHeight / 4;
+        const radiusY = window.innerHeight / 6;
         const speed = 0.001;
         const time = Date.now() * speed;
 
@@ -278,7 +288,7 @@ checkMouseMovement();
 async function loadFile(file) {
     document.body.classList.remove('menu-open');
     try {
-        const depthCanvas = await generateDepthMap(file, 518);
+        const depthCanvas = await generateDepthMap(file, 1024);
 
         // convert depth map canvas to blob URL
         return await new Promise((resolve, reject) => {
@@ -412,7 +422,11 @@ if (window.location.hash === '#sbs') {
 const urlParams = new URLSearchParams(window.location.search);
 
 if (urlParams.get('input')) {
-    inputImage = urlParams.get('input');
+
+    // replace all " " with "+"
+    inputImage = urlParams.get('input').replace(/ /g, '+');
+
+    // ?depthmap parameter? also load depth map from URL
     if (urlParams.get('depthmap')) {
         depthMapImage = urlParams.get('depthmap');
         load3DImage(inputImage, depthMapImage);
@@ -433,3 +447,16 @@ if (urlParams.get('input')) {
 } else {
     load3DImage('img/examples/forest.webp', 'img/examples/forest-depthmap.png');
 }
+
+
+window.Alpine = Alpine
+
+
+Alpine.data('app', () => ({
+    state: 'idle',
+    init() {
+        console.log('Alpine component initialized');
+    }
+}));
+
+Alpine.start()

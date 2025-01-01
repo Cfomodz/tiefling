@@ -5,6 +5,11 @@ export const Tiefling = function (containerSelector, image, depthMap, options) {
 
     let container = document.querySelector(containerSelector);
     let mouseXOffset = options.mouseXOffset || 0; // 0 (0vw) to 1 (100vw)
+    let focus = options.focus || 1; // 1: strafe camera. 0.3: rotate around some middle point
+
+    // stretch in x or y direction, for example stretch it vertically by 2x for hsbs mode
+    let scaleX = options.scaleX || 1;
+    let scaleY = options.scaleY || 1;
 
     let scene, camera, renderer, quad;
     let mouseX = 0, mouseY = 0;
@@ -23,9 +28,11 @@ export const Tiefling = function (containerSelector, image, depthMap, options) {
             offset: { value: new THREE.Vector2(0, 0) },
             resolution: { value: new THREE.Vector2(containerWidth, containerHeight) },
             textureResolution: { value: new THREE.Vector2(1, 1) },
-            focus: { value: 0.3 },
+            focus: { value: focus },
             scale: { value: 0.0125 },
-            enlarge: { value: 1.06 }
+            enlarge: { value: 1.06 },
+            scaleX: { value: scaleX },
+            scaleY: { value: scaleY }
         },
         vertexShader: `
                     varying vec2 vUv;
@@ -36,7 +43,7 @@ export const Tiefling = function (containerSelector, image, depthMap, options) {
                 `,
         fragmentShader: `
                 precision mediump float;
-
+            
                 uniform sampler2D colorTexture;
                 uniform sampler2D depthTexture;
                 uniform vec2 offset;
@@ -45,35 +52,48 @@ export const Tiefling = function (containerSelector, image, depthMap, options) {
                 uniform float focus;
                 uniform float scale;
                 uniform float enlarge;
+                uniform float scaleX;
+                uniform float scaleY;
                 varying vec2 vUv;
-
+            
                 #define MAXSTEPS 128.0
                 #define COMPRESSION 0.8
-
-                vec2 coverUV(vec2 uv, vec2 resolution, vec2 texResolution) {
-                    float resRatio = resolution.x / resolution.y;
-                    float texRatio = texResolution.x / texResolution.y;
+            
+                vec2 coverUV(vec2 uv, vec2 resolution, vec2 textureResolution) {
+                    // Calculate base ratios
+                    float containerRatio = resolution.x / resolution.y;
+                    float imageRatio = textureResolution.x / textureResolution.y;
                     
                     vec2 scale = vec2(1.0);
                     vec2 offset = vec2(0.0);
-                    float ratioDiff = resRatio / texRatio;
-
-                    if (ratioDiff > 1.0) {
-                        scale.x = ratioDiff;
-                        offset.x = (1.0 - scale.x) * 0.5;
+                    
+                    // Contain behavior
+                    if (containerRatio < imageRatio) {
+                        // Container is relatively taller than image
+                        scale.x = 1.0;
+                        scale.y = (containerRatio / imageRatio);
                     } else {
-                        scale.y = 1.0 / ratioDiff;
-                        offset.y = (1.0 - scale.y) * 0.5;
+                        // Container is relatively wider than image
+                        scale.x = (imageRatio / containerRatio);
+                        scale.y = 1.0;
                     }
-
-                    return uv * scale + offset;
+                    
+                    // Apply vertical stretch for SBS mode
+                    scale.y *= scaleY;
+                    
+                    // Center the image
+                    offset = (1.0 - scale) * 0.5;
+                    
+                    // Apply scaling and offset to UV
+                    return (uv - 0.5) / scale + 0.5;
                 }
 
                 void main() {
                     vec2 uv = coverUV(vUv, resolution, textureResolution);
-                    
+        
+                    // Discard pixels outside the valid range
                     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-                        gl_FragColor = vec4(0.0);
+                        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
                         return;
                     }
 
@@ -214,6 +234,8 @@ export const Tiefling = function (containerSelector, image, depthMap, options) {
         renderer.setSize(containerWidth, containerHeight);
         renderer.setPixelRatio(window.devicePixelRatio);
         material.uniforms.resolution.value.set(containerWidth, containerHeight);
+        material.uniforms.scaleX.value = scaleX;
+        material.uniforms.scaleY.value = scaleY;
     };
 
     window.addEventListener('resize', onResize);
