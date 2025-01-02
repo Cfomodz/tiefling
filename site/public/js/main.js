@@ -1,5 +1,8 @@
-import { Tiefling } from '/js/tiefling.js';
 import Alpine from '/js/alpine.esm.js';
+window.Alpine = Alpine;
+
+import { Tiefling } from '/js/tiefling.js';
+
 
 
 ort.env.wasm.wasmPaths = {
@@ -17,7 +20,7 @@ ort.env.wasm.wasmPaths = {
  * @param height
  * @returns {Float32Array}
  */
-const preprocess = (input_imageData, width, height) => {
+const preprocessImage = (input_imageData, width, height) => {
     var floatArr = new Float32Array(width * height * 3);
     var floatArr1 = new Float32Array(width * height * 3);
     var floatArr2 = new Float32Array(width * height * 3);
@@ -58,7 +61,7 @@ const preprocess = (input_imageData, width, height) => {
  * @param tensor
  * @returns {ImageData}
  */
-const postprocess = (tensor) => {
+const postprocessImage = (tensor) => {
     const height = tensor.dims[1];
     const width = tensor.dims[2];
 
@@ -144,7 +147,7 @@ const generateDepthMap = async function(imageFile, inputSize = 518) {
         const session = await ort.InferenceSession.create("/models/depthanythingv2-vits-dynamic-quant.onnx");
 
         // preprocess the image
-        const preprocessed = preprocess(imageData, inputSize, inputSize);
+        const preprocessed = preprocessImage(imageData, inputSize, inputSize);
 
         const input = new ort.Tensor(new Float32Array(preprocessed), [1, 3, inputSize, inputSize]);
 
@@ -152,7 +155,7 @@ const generateDepthMap = async function(imageFile, inputSize = 518) {
         const result = await session.run({ image: input });
 
         // postprocess the result
-        const processedImageData = postprocess(result.depth);
+        const processedImageData = postprocessImage(result.depth);
 
         // create output canvas at original size
         const outputCanvas = document.createElement('canvas');
@@ -206,8 +209,6 @@ function load3DImage(image, depthMap) {
     if (tiefling1) {
         tiefling1.destroy();
     }
-
-
 
     if (document.body.classList.contains('sbs')) {
 
@@ -340,19 +341,6 @@ document.addEventListener('touchend', () => {
 });
 
 
-// open/close menu
-els.toggleMenu.addEventListener('click', (event) => {
-    event.preventDefault();
-    document.body.classList.toggle('menu-open');
-});
-
-// click anywhere outside menu: close it
-document.addEventListener('click', (event) => {
-    if (!event.target.closest('.controls')) {
-        document.body.classList.remove('menu-open');
-    }
-});
-
 // upload image from menu
 els.inputFile.addEventListener('change', async (event) => {
     const file = event.target.files[0];
@@ -373,90 +361,185 @@ els.inputSbs.addEventListener('change', (event) => {
 });
 
 
-// accept dragged image on body
-document.body.addEventListener('dragover', (event) => {
-    event.preventDefault();
-
-    // check size and type of the file. over 20MB: too big. only jpg and png
-    if (event.dataTransfer.items.length === 1 && event.dataTransfer.items[0].kind === 'file' && event.dataTransfer.items[0].type.match('^image/')) {
-        event.dataTransfer.dropEffect = 'copy';
-    } else {
-        event.dataTransfer.dropEffect = 'none';
-    }
-
-});
-
-document.body.addEventListener('drop', async (event) => {
-    event.preventDefault();
-    const file = event.dataTransfer.files[0];
-    document.body.classList.remove('menu-open');
-    try {
-        document.body.setAttribute('data-state', 'loading');
-        const depthMapURL = await loadFile(file);
-        await load3DImage(URL.createObjectURL(file), depthMapURL);
-        document.body.setAttribute('data-state', 'idle');
-    } catch (error) {
-        console.error("loading image error: ", error);
-        document.body.setAttribute('data-state', 'error');
-    }
-
-});
 
 
-// init
-
-if (window.location.hash === '#sbs') {
-    document.body.classList.add('sbs');
-    els.inputSbs.checked = true;
-} else {
-    // check sbs cookie
-    if (document.cookie.includes('sbs=1')) {
-        document.body.classList.add('sbs');
-        els.inputSbs.checked = true;
-        window.location.hash = 'sbs';
-    }
-}
-
-
-// ?input parameter? load image from URL
-const urlParams = new URLSearchParams(window.location.search);
-
-if (urlParams.get('input')) {
-
-    // replace all " " with "+"
-    inputImage = urlParams.get('input').replace(/ /g, '+');
-
-    // ?depthmap parameter? also load depth map from URL
-    if (urlParams.get('depthmap')) {
-        depthMapImage = urlParams.get('depthmap');
-        load3DImage(inputImage, depthMapImage);
-    } else {
-        document.body.setAttribute('data-state', 'loading');
-
-        // load image file from url
-        const imageBlob = await fetch(inputImage).then(response => response.blob());
-
-        // generate depth map
-        const depthMapURL = await loadFile(imageBlob);
-
-        load3DImage(URL.createObjectURL(imageBlob), depthMapURL);
-
-        document.body.setAttribute('data-state', 'idle');
-    }
-
-} else {
-    load3DImage('img/examples/forest.webp', 'img/examples/forest-depthmap.png');
-}
-
-
-window.Alpine = Alpine
 
 
 Alpine.data('app', () => ({
+
     state: 'idle',
-    init() {
-        console.log('Alpine component initialized');
-    }
+    menuVisible: false,
+    displayMode: 'full', // full, hsbs, fsbs, anaglyph (red cyan)
+    possibleDisplayModes: ['full', 'hsbs', 'fsbs', 'anaglyph'],
+
+    inputImageURL: '',
+    inputImageDragActive: false,
+
+    async init() {
+
+        this.handleURLParams();
+        this.handleDragDrop();
+
+        // click anywhere outside .menu or.toggle-menu: set menuVisible to false
+        document.addEventListener('click', (event) => {
+            if (this.menuVisible && !event.target.closest('.menu') && !event.target.closest('.toggle-menu')) {
+                this.menuVisible = false;
+            }
+        });
+
+        // #sbs parameter in url? set body class
+        if (window.location.hash === '#sbs') {
+            document.body.classList.add('sbs');
+        }
+
+    },
+
+    // handle optional URL parameters
+    // ?input={url} - load image from URL, generate depthmap if none given
+    // ?depthmap={url} - load depthmap from URL
+    // ?displayMode={full, hsbs, fsbs, anaglyph} - set display mode
+    async handleURLParams() {
+        // ?input parameter? load image from URL
+        const urlParams = new URLSearchParams(window.location.search);
+
+        if (urlParams.get('input')) {
+
+            // replace all " " with "+"
+            inputImage = urlParams.get('input').replace(/ /g, '+');
+
+            // ?depthmap parameter? also load depth map from URL
+            if (urlParams.get('depthmap')) {
+                depthMapImage = urlParams.get('depthmap');
+                load3DImage(inputImage, depthMapImage);
+            } else {
+                this.state = "loading";
+
+                // load image file from url
+                const imageBlob = await fetch(inputImage).then(response => response.blob());
+
+                // generate depth map
+                const depthMapURL = await loadFile(imageBlob);
+
+                load3DImage(URL.createObjectURL(imageBlob), depthMapURL);
+
+                this.state = "idle";
+            }
+
+        } else {
+            load3DImage('img/examples/forest.webp', 'img/examples/forest-depthmap.png');
+        }
+
+        // set display mode from url param or cookie
+        if (urlParams.get("displayMode")) {
+            this.displayMode = this.possibleDisplayModes.contains(urlParams.get("displayMode")) ? urlParams.get("displayMode") : 'full';
+            document.cookie = 'displayMode=' + this.displayMode;
+        } else {
+            // check cookie
+            if (document.cookie.includes('displayMode')) {
+                this.displayMode = this.possibleDisplayModes.contains(document.cookie.split('=')[1]) ? document.cookie.split('=')[1] : 'full';
+            }
+        }
+    },
+
+
+    // drag & drop image to load it and generate a depth map
+    async handleDragDrop() {
+
+        // accept dragged image on body
+        document.querySelector(".containers").addEventListener('dragover', (event) => {
+            event.preventDefault();
+
+            // check size and type of the file. over 20MB: too big. only jpg and png
+            if (event.dataTransfer.items.length === 1 && event.dataTransfer.items[0].kind === 'file' && event.dataTransfer.items[0].type.match('^image/')) {
+                event.dataTransfer.dropEffect = 'copy';
+            } else {
+                event.dataTransfer.dropEffect = 'none';
+            }
+
+        });
+
+        document.querySelector(".containers").addEventListener('drop', async (event) => {
+            event.preventDefault();
+            const file = event.dataTransfer.files[0];
+            this.menuVisible = false
+            try {
+                this.state = "loading";
+                const depthMapURL = await loadFile(file);
+                await load3DImage(URL.createObjectURL(file), depthMapURL);
+                this.state = "idle";
+            } catch (error) {
+                console.error("loading image error: ", error);
+                this.state = "error";
+            }
+
+        });
+
+    },
+
+
+    async handleInputImageFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        this.inputImageURL = "Uploaded file...";
+        this.state = "loading";
+
+        const depthMap = await loadFile(file);
+        load3DImage(URL.createObjectURL(file), depthMap);
+
+        this.state = "idle";
+    },
+
+    async handleInputImageURL() {
+
+        // is inputImageURL an URL?
+        if (this.inputImageURL.match(/^https?:\/\//)) {
+            this.state = "loading";
+            const imageBlob = await fetch(this.inputImageURL).then(response => response.blob());
+
+            // generate depth map
+            const depthMapURL = await loadFile(imageBlob);
+
+            load3DImage(URL.createObjectURL(imageBlob), depthMapURL);
+
+
+            // add inputImageURL to URL
+            const url = new URL(window.location.href);
+            url.searchParams.set('input', this.inputImageURL);
+            window.history.pushState({}, '', url);
+
+            this.state = "idle";
+        }
+
+    },
+
+    // Handle file drop on input field
+    async handleInputImageFileDrop(event) {
+
+        const file = event.dataTransfer.files[0];
+        if (!file || !file.type.match('^image/')) {
+            console.error("Dropped file is not an image");
+            this.inputImageDragActive = false;
+            return;
+        }
+
+        try {
+            // Reset drag state and update status
+            this.inputImageDragActive = false;
+            this.inputImageURL = "Uploaded file...";
+            this.state = "loading";
+
+            // Process the dropped file
+            const depthMap = await loadFile(file);
+            load3DImage(URL.createObjectURL(file), depthMap);
+
+            this.state = "idle";
+
+        } catch (error) {
+            console.error("Error while handling dropped file:", error);
+            this.state = "error";
+        }
+    },
 }));
 
 Alpine.start()

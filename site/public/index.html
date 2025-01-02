@@ -15,180 +15,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="Tiefling">
 
+    <link rel="stylesheet" href="/css/main.css">
+
     <script src="/js/onnx/ort.min.js"></script>
     <script src="/js/main.js" type="module"></script>
-
-
-    <style>
-
-        :root {
-            --color-text: #ccc;
-            --color-background: #000;
-            --color-main: #0085ff;
-        }
-        * {
-            box-sizing: border-box;
-        }
-
-        html,
-        body {
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            overflow: hidden;
-            background: var(--color-background);
-            color: var(--color-text);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-
-        }
-
-        .containers {
-            display: grid;
-            width: 100vw;
-            height: 100vh;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .containers .inner {
-            display: grid;
-            width: 100vw;
-            height: 100vh;
-            grid-template-columns: 1fr;
-        }
-
-        .containers .inner .container {
-            overflow: hidden;
-        }
-
-        .container-2 {
-            display: none;
-        }
-
-        .sbs .containers {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-
-
-        }
-        .sbs .containers .inner {
-            aspect-ratio: 16 / 9;
-            width: auto;
-            height: auto;
-            max-width: 100vw;
-            max-height: 100vh;
-            /* Calculate the smaller of width/height while maintaining aspect ratio */
-            min-width: min(100vw, calc(100vh * 16/9));
-            min-height: min(100vh, calc(100vw * 9/16));
-            grid-template-columns: 1fr 1fr;
-        }
-        .sbs .containers .container {
-            width: 100%;
-            height: 100%;
-            aspect-ratio: 8 / 9;
-        }
-
-        .sbs .containers .container-2 {
-            display: block;
-        }
-
-        .controls {
-            position: fixed;
-            top: 0;
-            right: 0;
-        }
-
-        .controls .top {
-            position: absolute;
-            top: 0;
-            right: 0;
-            text-align: right;
-            width: 300px;
-        }
-        .controls .top .states {
-            display: inline-block;
-            margin-right: 10px;
-            vertical-align: top;
-            padding-top: 18px;
-        }
-        .controls .top .toggle-menu {
-            display: inline-block;
-            cursor: pointer;
-            color: var(--color-text);
-            padding: 20px;
-        }
-        .controls .top .toggle-menu svg {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-        }
-
-        .controls .menu {
-            display: none;
-            position: absolute;
-            top: 50px;
-            right: 20px;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(10px);
-            border-radius: 10px;
-            width: 220px;
-            padding: 0 20px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .controls .menu .menu-item {
-            margin: 20px 0;
-        }
-        .controls .menu .menu-item a {
-            color: var(--color-main);
-            text-decoration: none;
-        }
-        .controls .menu label {
-            padding: 10px 0;
-        }
-        .controls .menu label[for="file"] {
-            color: var(--color-main);
-            padding: 10px 0;
-        }
-
-        body.menu-open .controls .menu {
-            display: block;
-        }
-
-        /* states */
-        .states .state {
-            display: inline-block;
-        }
-        .states .state-loading .svg-wrap {
-            display: inline-block;
-            transform: translateY(2px);
-        }
-        .states .state-loading svg {
-            display: inline-block;
-            color: var(--color-text);
-            width: 20px;
-            height: 20px;
-            vertical-align: bottom;
-            animation: rotate 3s linear infinite;
-        }
-
-
-        @keyframes rotate {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        [x-cloak] {
-            display: none;
-        }
-
-    </style>
 </head>
 
 <body x-data="app">
@@ -211,11 +41,40 @@
                 </span>
                 <span class="state state-error" x-show="state == 'error'">Error :&lt;</span>
             </span>
-            <a href="#" class="toggle-menu" title="Menu">
+            <a href="#" class="toggle-menu" title="Menu" @click.prevent="menuVisible = !menuVisible">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M3 4H21V6H3V4ZM3 11H21V13H3V11ZM3 18H21V20H3V18Z"></path></svg>
             </a>
         </div>
-        <div class="menu">
+        <div class="menu" x-show="menuVisible">
+            <div class="menu-group">
+                <div class="menu-row">
+                    <h3>Input Image</h3>
+                    <div class="file-upload">
+                        <input type="url"
+                               id="input-image-url"
+                               x-model="inputImageURL"
+                               placeholder="https://..."
+                               @change="handleInputImageURL()"
+                               @dragover.prevent="inputImageDragActive = true"
+                               @dragleave.prevent="inputImageDragActive = false"
+                               @drop.prevent="handleInputImageFileDrop($event)"
+                               :class="{ 'dragging': inputImageDragActive }"
+                        >
+
+                        <!-- click on button triggers click on file input -->
+                        <button class="upload" id="input-image-button" title="Upload" @click="$refs.inputImageFile.click()">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12.5858L16.2426 16.8284L14.8284 18.2426L13 16.415V22H11V16.413L9.17157 18.2426L7.75736 16.8284L12 12.5858ZM12 2C15.5934 2 18.5544 4.70761 18.9541 8.19395C21.2858 8.83154 23 10.9656 23 13.5C23 16.3688 20.8036 18.7246 18.0006 18.9776L18.0009 16.9644C19.6966 16.7214 21 15.2629 21 13.5C21 11.567 19.433 10 17.5 10C17.2912 10 17.0867 10.0183 16.8887 10.054C16.9616 9.7142 17 9.36158 17 9C17 6.23858 14.7614 4 12 4C9.23858 4 7 6.23858 7 9C7 9.36158 7.03838 9.7142 7.11205 10.0533C6.91331 10.0183 6.70879 10 6.5 10C4.567 10 3 11.567 3 13.5C3 15.2003 4.21241 16.6174 5.81986 16.934L6.00005 16.9646L6.00039 18.9776C3.19696 18.7252 1 16.3692 1 13.5C1 10.9656 2.71424 8.83154 5.04648 8.19411C5.44561 4.70761 8.40661 2 12 2Z"></path></svg>
+                        </button>
+                        <input type="file" id="input-image-file" accept="image/*" style="display: none;" x-ref="inputImageFile" @change="handleInputImageFile($event)">
+                    </div>
+                    <div class="info">
+                        Enter URL, upload or drag a file over.
+                    </div>
+                </div>
+                <div class="menu-row">
+
+                </div>
+            </div>
             <div class="menu-item">
                 <label for="file">Load Image</label>
                 <input type="file" id="file" accept="image/*" style="display: none;">
@@ -226,18 +85,19 @@
             <div class="menu-item">
                 <h3>Display Mode</h3>
                 <input type="radio" name="display-mode" id="display-mode-one" value="one" checked> <label for="display-mode-one">One</label>
-                <input type="checkbox" name="display-mode" id="toggle-sbs" value="sbs"> <label for="display-mode-hsbs">Half SBS</label>
+                <input type="checkbox" name="display-mode" id="toggle-sbs" value="sbs"> <label for="toggle-sbs">Half SBS</label>
                 <input type="radio" name="display-mode" id="display-mode-fsbs" value="fsbs"> <label for="display-mode-fsbs">Full SBS</label>
                 <input type="radio" name="display-mode" id="display-mode-anaglyph" value="anaglyph-red-cyan"> <label for="display-mode-anaglyph-red-cyan">Anaglyph Red/Cyan</label>
             </div>
             <hr>
-            <div class="menu-item">
-                <a href="https://github.com/combatwombat/tiefling">Code on GitHub</a>
+            <div class="bottom">
+                <div class="menu-item">
+                    <a href="https://github.com/combatwombat/tiefling">Code on GitHub</a>
+                </div>
+                <div class="menu-item">
+                    &copy; 2024 <a href="https://robsite.net">Robert Gerlach</a>
+                </div>
             </div>
-            <div class="menu-item">
-                &copy; 2024 <a href="https://robsite.net">Robert Gerlach</a>
-            </div>
-
         </div>
 
     </div>

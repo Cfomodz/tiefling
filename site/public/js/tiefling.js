@@ -5,7 +5,7 @@ export const Tiefling = function (containerSelector, image, depthMap, options) {
 
     let container = document.querySelector(containerSelector);
     let mouseXOffset = options.mouseXOffset || 0; // 0 (0vw) to 1 (100vw)
-    let focus = options.focus || 1; // 1: strafe camera. 0.3: rotate around some middle point
+    let focus = options.focus || 0.3; // 1: strafe camera. 0.3: rotate around some middle point
 
     // stretch in x or y direction, for example stretch it vertically by 2x for hsbs mode
     let scaleX = options.scaleX || 1;
