@@ -1,0 +1,19 @@
+{
+  "name": "tiefling",
+  "version": "1.0.0",
+  "description": "Generates depth maps from images, renders 3D view in a canvas",
+  "main": "tiefling.js",
+  "exports": {
+    ".": "./tiefling.js"
+  },
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Robert Gerlach",
+  "license": "MIT",
+  "dependencies": {
+    "onnxruntime-web": "^1.20.1",
+    "three": "^0.172.0"
+  }
+}
