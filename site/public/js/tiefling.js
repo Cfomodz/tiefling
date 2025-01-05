@@ -1,6 +1,14 @@
 import * as THREE from '/js/threejs/three.module.js';
 
-// 3D image viewer
+/**
+ * Tiefling - create depthmaps from images, render them in canvas in a 3D view.
+ * @param containerSelector
+ * @param image - path to the image
+ * @param depthMap - path to the depthmap
+ * @param options
+ * @returns {{destroy: *, onMouseMove: *}}
+ * @constructor
+ */
 export const Tiefling = function (containerSelector, image, depthMap, options) {
 
     let container = document.querySelector(containerSelector);

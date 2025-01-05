@@ -199,6 +199,11 @@ let depthMapImage = null;
 
 let tiefling1, tiefling2;
 
+/**
+ *
+ * @param image - path to image
+ * @param depthMap - path to depth map
+ */
 function load3DImage(image, depthMap) {
 
     // put depthmap url in download link
@@ -286,7 +291,7 @@ checkMouseMovement();
  * @param file {File} Image file
  * @returns {Promise<*>} URL of the depth map
  */
-async function loadFile(file) {
+async function getDepthmapURL(file) {
     document.body.classList.remove('menu-open');
     try {
         const depthCanvas = await generateDepthMap(file, 1024);
@@ -303,7 +308,7 @@ async function loadFile(file) {
         });
 
     } catch (error) {
-        console.error("error in loadFile:", error);
+        console.error("error in getDepthmapURL:", error);
         throw error;
     }
 }
@@ -344,8 +349,8 @@ document.addEventListener('touchend', () => {
 // upload image from menu
 els.inputFile.addEventListener('change', async (event) => {
     const file = event.target.files[0];
-    const depthMap = await loadFile(file);
-    load3DImage(URL.createObjectURL(file), depthMap);
+    const depthMapURL = await getDepthmapURL(file);
+    load3DImage(URL.createObjectURL(file), depthMapURL);
 });
 
 // reload page with or without #sbs parameter
@@ -373,7 +378,14 @@ Alpine.data('app', () => ({
     possibleDisplayModes: ['full', 'hsbs', 'fsbs', 'anaglyph'],
 
     inputImageURL: '',
+    inputImageFile: null,
     inputImageDragActive: false,
+    inputImage: null,
+
+    depthmapImageURL: '',
+    depthmapImageFile: null,
+    depthmapImageDragActive: false,
+    depthmapImage: null,
 
     async init() {
 
@@ -418,7 +430,7 @@ Alpine.data('app', () => ({
                 const imageBlob = await fetch(inputImage).then(response => response.blob());
 
                 // generate depth map
-                const depthMapURL = await loadFile(imageBlob);
+                const depthMapURL = await getDepthmapURL(imageBlob);
 
                 load3DImage(URL.createObjectURL(imageBlob), depthMapURL);
 
@@ -464,7 +476,7 @@ Alpine.data('app', () => ({
             this.menuVisible = false
             try {
                 this.state = "loading";
-                const depthMapURL = await loadFile(file);
+                const depthMapURL = await getDepthmapURL(file);
                 await load3DImage(URL.createObjectURL(file), depthMapURL);
                 this.state = "idle";
             } catch (error) {
@@ -477,40 +489,13 @@ Alpine.data('app', () => ({
     },
 
 
+    // on input image file upload
     async handleInputImageFile(event) {
         const file = event.target.files[0];
         if (!file) return;
 
-        this.inputImageURL = "Uploaded file...";
-        this.state = "loading";
-
-        const depthMap = await loadFile(file);
-        load3DImage(URL.createObjectURL(file), depthMap);
-
-        this.state = "idle";
-    },
-
-    async handleInputImageURL() {
-
-        // is inputImageURL an URL?
-        if (this.inputImageURL.match(/^https?:\/\//)) {
-            this.state = "loading";
-            const imageBlob = await fetch(this.inputImageURL).then(response => response.blob());
-
-            // generate depth map
-            const depthMapURL = await loadFile(imageBlob);
-
-            load3DImage(URL.createObjectURL(imageBlob), depthMapURL);
-
-
-            // add inputImageURL to URL
-            const url = new URL(window.location.href);
-            url.searchParams.set('input', this.inputImageURL);
-            window.history.pushState({}, '', url);
-
-            this.state = "idle";
-        }
-
+        this.inputImageURL = "Uploaded file";
+        this.inputImageFile = file;
     },
 
     // Handle file drop on input field
@@ -526,20 +511,99 @@ Alpine.data('app', () => ({
         try {
             // Reset drag state and update status
             this.inputImageDragActive = false;
-            this.inputImageURL = "Uploaded file...";
-            this.state = "loading";
+            this.inputImageURL = "Uploaded file";
 
-            // Process the dropped file
-            const depthMap = await loadFile(file);
-            load3DImage(URL.createObjectURL(file), depthMap);
-
-            this.state = "idle";
+            this.inputImageFile = file;
 
         } catch (error) {
             console.error("Error while handling dropped file:", error);
             this.state = "error";
         }
     },
+
+    // on depthmap file upload
+    async handleDepthmapImageFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        this.depthmapImageURL = "Uploaded file";
+        this.depthmapImageFile = file;
+    },
+
+
+    // Handle file drop on depthmap field
+    async handleDepthmapImageFileDrop(event) {
+
+        const file = event.dataTransfer.files[0];
+        if (!file || !file.type.match('^image/')) {
+            console.error("Dropped file is not an image");
+            this.depthmapImageDragActive = false;
+            return;
+        }
+
+        try {
+            // Reset drag state and update status
+            this.depthmapImageDragActive = false;
+            this.depthmapImageURL = "Uploaded file";
+            this.depthmapImageFile = file;
+
+        } catch (error) {
+            console.error("Error while handling dropped file:", error);
+            this.state = "error";
+        }
+    },
+
+    async loadImage() {
+
+        this.state = "loading";
+
+        this.inputImage = this.depthmapImage = null;
+
+        let inputURL = '';
+        let depthmapURL = '';
+
+        // get input image from url or uploaded aor dragged file
+        if (this.inputImageFile) {
+            this.inputImage = this.inputImageFile;
+        } else if (this.inputImageURL) {
+            inputURL = this.inputImageURL;
+            this.inputImage = await fetch(this.inputImageURL).then(response => response.blob());
+        }
+
+        // get depthmap image from url or uploaded aor dragged file
+        if (this.depthmapImageFile) {
+            this.depthmapImage = this.depthmapImageFile;
+        } else if (this.depthmapImageURL) {
+            depthmapURL = this.depthmapImageURL;
+            this.depthmapImage = await fetch(this.depthmapImageURL).then(response => response.blob());
+        }
+
+        if (this.depthmapImage) {
+            load3DImage(URL.createObjectURL(this.inputImage), URL.createObjectURL(this.depthmapImage));
+
+        } else {
+            depthmapURL = await getDepthmapURL(this.inputImage);
+
+            this.depthmapImage = await fetch(depthmapURL).then(response => response.blob());
+            load3DImage(URL.createObjectURL(this.inputImage), depthmapURL);
+
+        }
+
+
+        // add ?input (and optional &depthmap) parameter to history, if the urls start with https
+        if (inputURL.match(/^https?:\/\//)) {
+
+            let newPath = window.location.origin + window.location.pathname + '?input=' + encodeURIComponent(inputURL);
+
+            if (depthmapURL.match(/^https?:\/\//)) {
+                newPath += '&depthmap=' + encodeURIComponent(depthmapURL);
+            }
+
+            history.pushState({}, '', newPath);
+        }
+
+        this.state = "idle";
+
+    }
 }));
 
 Alpine.start()
