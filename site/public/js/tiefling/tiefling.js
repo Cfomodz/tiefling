@@ -392,7 +392,7 @@ export const generateDepthmap = function(imageFile, options = {}) {
      * @param size 518: pretty fast, good quality. 1024: slower, better quality. higher or lower might throw error
      * @returns {Promise<HTMLCanvasElement>}
      */
-    async function generate(imageFile, size = 518) {
+    async function generate(imageFile, maxSize = 518) {
         try {
             const imageUrl = URL.createObjectURL(imageFile);
 
@@ -403,6 +403,12 @@ export const generateDepthmap = function(imageFile, options = {}) {
                 image.onerror = () => reject(new Error('Failed to load image'));
                 image.src = imageUrl;
             });
+
+            // determine the actual processing size
+            const size = Math.min(
+                maxSize,
+                Math.max(image.width, image.height)
+            );
 
             // create a canvas for the resized input
             const resizeCanvas = document.createElement('canvas');
