@@ -1,6 +1,6 @@
 {
   "name": "tiefling",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Generates depth maps from images, renders 3D view in a canvas",
   "main": "tiefling.js",
   "exports": {

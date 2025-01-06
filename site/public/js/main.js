@@ -3,7 +3,7 @@ window.Alpine = Alpine;
 
 import { Tiefling } from '/js/tiefling/tiefling.js';
 
-let tiefling = new Tiefling(document.querySelector(".tiefling"), { depthmapSize: 1024 });
+let tiefling = new Tiefling(document.querySelector(".tiefling"), { depthmapSize: 518 });
 
 
 Alpine.data('app', () => ({
@@ -23,6 +23,8 @@ Alpine.data('app', () => ({
     depthmapImageDragActive: false,
     depthmapImage: null,
     depthmapURL: '', // URL of depthmap (generated or loaded externally)
+
+    focus: tiefling.getFocus(),
 
     async init() {
 
@@ -54,20 +56,20 @@ Alpine.data('app', () => ({
         if (urlParams.get('input')) {
 
             // replace all " " with "+"
-            let inputImage = urlParams.get('input').replace(/ /g, '+');
+            this.inputImageURL = urlParams.get('input').replace(/ /g, '+');
 
             // ?depthmap parameter? also load depth map from URL
             if (urlParams.get('depthmap')) {
                 this.depthmapURL = urlParams.get('depthmap');
-                tiefling.load3DImage(inputImage, this.depthmapURL);
+                tiefling.load3DImage(this.inputImageURL, this.depthmapURL);
             } else {
                 this.state = "loading";
 
                 // load image file from url
-                const imageBlob = await fetch(inputImage).then(response => response.blob());
+                const imageBlob = await fetch(this.inputImageURL).then(response => response.blob());
 
                 // generate depth map
-                this.depthmapURL = await getDepthmapURL(imageBlob);
+                this.depthmapURL = await tiefling.getDepthmapURL(imageBlob);
 
                 tiefling.load3DImage(URL.createObjectURL(imageBlob), this.depthmapURL);
 
@@ -202,9 +204,11 @@ Alpine.data('app', () => ({
             this.inputImage = await fetch(this.inputImageURL).then(response => response.blob());
         }
 
-        // get depthmap image from url or uploaded aor dragged file
+        // get depthmap image from url, uploaded or dragged file
         if (this.depthmapImageFile) {
             this.depthmapImage = this.depthmapImageFile;
+            this.depthmapURL = URL.createObjectURL(this.depthmapImage);
+
         } else if (this.depthmapImageURL) {
             this.depthmapURL = this.depthmapImageURL;
             this.depthmapImage = await fetch(this.depthmapImageURL).then(response => response.blob());
@@ -214,7 +218,7 @@ Alpine.data('app', () => ({
             tiefling.load3DImage(URL.createObjectURL(this.inputImage), URL.createObjectURL(this.depthmapImage));
 
         } else {
-            this.depthmapURL = await getDepthmapURL(this.inputImage);
+            this.depthmapURL = await tiefling.getDepthmapURL(this.inputImage);
 
             this.depthmapImage = await fetch(this.depthmapURL).then(response => response.blob());
             tiefling.load3DImage(URL.createObjectURL(this.inputImage), this.depthmapURL);
@@ -235,6 +239,10 @@ Alpine.data('app', () => ({
 
         this.state = "idle";
 
+    },
+
+    updateFocus() {
+        tiefling.setFocus(this.focus);
     }
 }));
 

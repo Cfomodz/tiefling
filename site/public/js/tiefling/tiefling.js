@@ -15,6 +15,7 @@ export const Tiefling = function(container, options = {}) {
     this.idleMovementAfter = options.idleMovementAfter || 3000; // -1 to disable
 
     this.depthmapSize = options.depthmapSize || 518;
+    this.focus = options.focus || 0.3;
 
 
     let view1, view2;
@@ -48,18 +49,21 @@ export const Tiefling = function(container, options = {}) {
 
             view1 = TieflingView(container.querySelector('.inner .container-1'), image, depthMap, {
                 mouseXOffset: 0.3,
-                scaleY: 2
+                scaleY: 2,
+                focus: this.focus
             });
 
             if (view2) {
                 view2.destroy();
             }
             view2 = TieflingView(container.querySelector('.inner .container-2'), image, depthMap, {
-                scaleY: 2
+                scaleY: 2,
+                focus: this.focus
             });
         } else {
             view1 = TieflingView(container.querySelector('.inner .container-1'), image, depthMap, {
-                mouseXOffset: 0
+                mouseXOffset: 0,
+
             });
         }
     }
@@ -226,6 +230,20 @@ export const Tiefling = function(container, options = {}) {
 
         setDepthmapSize: (size) => {
             this.depthmapSize = size;
+        },
+
+        setFocus: (value) => {
+            this.focus = value;
+            if (view1) {
+                view1.setFocus(this.focus);
+            }
+            if (view2) {
+                view2.setFocus(this.focus);
+            }
+        },
+
+        getFocus: () => {
+            return this.focus;
         },
 
         getPossibleDisplayModes: () => {
