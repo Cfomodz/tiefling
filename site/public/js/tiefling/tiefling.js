@@ -16,6 +16,7 @@ export const Tiefling = function(container, options = {}) {
 
     this.depthmapSize = options.depthmapSize || 518;
     this.focus = options.focus || 0.3;
+    this.devicePixelRatio = Math.min(options.devicePixelRatio || window.devicePixelRatio || 1, 2);
 
 
     let view1, view2;
@@ -228,14 +229,18 @@ export const Tiefling = function(container, options = {}) {
 
         getDepthmapURL: getDepthmapURL,
 
-        setDepthmapSize: (size) => {
-            this.depthmapSize = size;
-        },
 
         getDepthmapSize: () => {
             return this.depthmapSize
         },
+        setDepthmapSize: (size) => {
+            this.depthmapSize = size;
+        },
 
+
+        getFocus: () => {
+            return this.focus;
+        },
         setFocus: (value) => {
             this.focus = value;
             if (view1) {
@@ -246,9 +251,20 @@ export const Tiefling = function(container, options = {}) {
             }
         },
 
-        getFocus: () => {
-            return this.focus;
+        getDevicePixelRatio: () => {
+            return this.devicePixelRatio
         },
+        setDevicePixelRatio: (size) => {
+            this.devicePixelRatio = size;
+            if (view1) {
+                view1.setDevicePixelRatio(this.devicePixelRatio);
+            }
+            if (view2) {
+                view2.setDevicePixelRatio(this.devicePixelRatio);
+            }
+        },
+
+
 
         getPossibleDisplayModes: () => {
             return possibleDisplayModes;
@@ -472,6 +488,7 @@ export const TieflingView = function (container, image, depthMap, options) {
     let mouseXOffset = options.mouseXOffset || 0; // 0 (0vw) to 1 (100vw)
     let focus = options.focus || 0.3; // 1: strafe camera, good for sbs view. 0.3: rotate around some middle point
     let mouseSensitivity = options.mouseSensitivity || 10;
+    let devicePixelRatio = options.devicePixelRatio || window.devicePixelRatio || 1;
 
     // stretch in x or y direction, for example stretch it vertically by 2x for hsbs mode
     let scaleX = options.scaleX || 1;
@@ -642,7 +659,7 @@ export const TieflingView = function (container, image, depthMap, options) {
         camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
         renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
         renderer.setSize(containerWidth, containerHeight);
         container.appendChild(renderer.domElement);
 
@@ -752,6 +769,13 @@ export const TieflingView = function (container, image, depthMap, options) {
             focus = value;
             if (material) {
                 material.uniforms.focus.value = focus;
+            }
+        },
+
+        setDevicePixelRatio: function(value) {
+            devicePixelRatio = value;
+            if (renderer) {
+                renderer.setPixelRatio(devicePixelRatio);
             }
         }
     };

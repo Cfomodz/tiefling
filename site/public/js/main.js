@@ -25,8 +25,8 @@ Alpine.data('app', () => ({
     depthmapURL: '', // URL of depthmap (generated or loaded externally)
     depthmapSize: tiefling.getDepthmapSize(),
 
-
     focus: tiefling.getFocus(),
+    devicePixelRatio: tiefling.getDevicePixelRatio(),
 
     async init() {
 
@@ -249,7 +249,13 @@ Alpine.data('app', () => ({
 
     updateDepthmapSize() {
         tiefling.setDepthmapSize(parseInt(this.depthmapSize));
-    }
+    },
+
+    updateDevicePixelRatio() {
+        tiefling.setDevicePixelRatio(parseFloat(this.devicePixelRatio));
+    },
+
+
 }));
 
 Alpine.start()
