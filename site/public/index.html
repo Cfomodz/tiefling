@@ -88,7 +88,7 @@
                     </div>
                 </div>
                 <div class="menu-row">
-                    <label for="depthmap-quality">Depth Map Quality</label>
+                    <label for="depthmap-quality">Depth Map Size</label>
                     <div class="input-range-number">
                         <div class="col col-range">
                             <input type="range" id="depthmap-quality" min="256" max="1536" step="1" x-model="depthmapSize" @input="updateDepthmapSize()" list="depthmapSizes">
@@ -149,27 +149,37 @@
                             </div>
                         </div>
                         <div class="col col-number">
-                            <input type="number" id="devicePixelRatio-number" min="0.1" max="2" step="0.01" x-model="devicePixelRatio" @input="updateDevicePixelRatio()">
+                            <input type="number" id="devicePixelRatio-number" min="0.1" max="4" step="0.01" x-model="devicePixelRatio" @input="updateDevicePixelRatio()">
+                        </div>
+                    </div>
+                </div>
+                <!--
+                <div class="menu-row">
+                    <label>Display Mode</label>
+                    <div class="input-radio-wrap">
+                        <input type="radio" id="display-mode-3d" name="display-mode" value="3d" x-model="displayMode" @change="updateDisplayMode()">
+                        <label for="display-mode-3d">3D</label>
+                        <input type="radio" id="display-mode-2d" name="display-mode" value="2d" x-model="displayMode" @change="updateDisplayMode()">
+                        <label for="display-mode-2d">2D</label>
+
+                    </div>
+                </div>-->
+            </div>
+            <div class="menu-group">
+                <div class="menu-row">
+                    <div class="about">
+                        <div class="col col-left">
+                            &copy; 2024 <a href="https://robsite.net">Robert Gerlach</a>
+                        </div>
+                        <div class="col col-right">
+                            <a href="https://github.com/combatwombat/tiefling">
+                                GitHub
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="menu-item">
-                <h3>Display Mode</h3>
-                <input type="radio" name="display-mode" id="display-mode-one" value="one" checked> <label for="display-mode-one">One</label>
-                <input type="checkbox" name="display-mode" id="toggle-sbs" value="sbs"> <label for="toggle-sbs">Half SBS</label>
-                <input type="radio" name="display-mode" id="display-mode-fsbs" value="fsbs"> <label for="display-mode-fsbs">Full SBS</label>
-                <input type="radio" name="display-mode" id="display-mode-anaglyph" value="anaglyph-red-cyan"> <label for="display-mode-anaglyph-red-cyan">Anaglyph Red/Cyan</label>
-            </div>
-            <hr>
-            <div class="bottom">
-                <div class="menu-item">
-                    <a href="https://github.com/combatwombat/tiefling">Code on GitHub</a>
-                </div>
-                <div class="menu-item">
-                    &copy; 2024 <a href="https://robsite.net">Robert Gerlach</a>
-                </div>
-            </div>
+
         </div>
 
     </div>

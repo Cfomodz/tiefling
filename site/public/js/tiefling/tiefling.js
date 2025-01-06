@@ -16,7 +16,7 @@ export const Tiefling = function(container, options = {}) {
 
     this.depthmapSize = options.depthmapSize || 518;
     this.focus = options.focus || 0.3;
-    this.devicePixelRatio = Math.min(options.devicePixelRatio || window.devicePixelRatio || 1, 2);
+    this.devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
 
 
     let view1, view2;
@@ -51,7 +51,8 @@ export const Tiefling = function(container, options = {}) {
             view1 = TieflingView(container.querySelector('.inner .container-1'), image, depthMap, {
                 mouseXOffset: 0.3,
                 scaleY: 2,
-                focus: this.focus
+                focus: this.focus,
+                devicePixelRatio: this.devicePixelRatio,
             });
 
             if (view2) {
@@ -59,12 +60,14 @@ export const Tiefling = function(container, options = {}) {
             }
             view2 = TieflingView(container.querySelector('.inner .container-2'), image, depthMap, {
                 scaleY: 2,
-                focus: this.focus
+                focus: this.focus,
+                devicePixelRatio: this.devicePixelRatio,
             });
         } else {
             view1 = TieflingView(container.querySelector('.inner .container-1'), image, depthMap, {
                 mouseXOffset: 0,
-
+                focus: this.focus,
+                devicePixelRatio: this.devicePixelRatio,
             });
         }
     }
@@ -106,11 +109,13 @@ export const Tiefling = function(container, options = {}) {
     /**
      * Load an image file and generate a depth map
      * @param file {File} Image file
+     * @param depthmapSize {number} Size of the depth map. 518: pretty fast, good quality. 1024: slower, better quality. higher or lower might throw error
      * @returns {Promise<*>} URL of the depth map
      */
-    const getDepthmapURL = async (file) => {
+    const getDepthmapURL = async (file, depthmapSize = null) => {
+
         try {
-            const depthCanvas = await generateDepthmap(file, {depthmapSize: this.depthmapSize});
+            const depthCanvas = await generateDepthmap(file, {depthmapSize: depthmapSize || this.depthmapSize});
 
             // convert depth map canvas to blob URL
             return await new Promise((resolve, reject) => {
@@ -256,6 +261,7 @@ export const Tiefling = function(container, options = {}) {
         },
         setDevicePixelRatio: (size) => {
             this.devicePixelRatio = size;
+
             if (view1) {
                 view1.setDevicePixelRatio(this.devicePixelRatio);
             }
@@ -263,8 +269,6 @@ export const Tiefling = function(container, options = {}) {
                 view2.setDevicePixelRatio(this.devicePixelRatio);
             }
         },
-
-
 
         getPossibleDisplayModes: () => {
             return possibleDisplayModes;
@@ -488,7 +492,7 @@ export const TieflingView = function (container, image, depthMap, options) {
     let mouseXOffset = options.mouseXOffset || 0; // 0 (0vw) to 1 (100vw)
     let focus = options.focus || 0.3; // 1: strafe camera, good for sbs view. 0.3: rotate around some middle point
     let mouseSensitivity = options.mouseSensitivity || 10;
-    let devicePixelRatio = options.devicePixelRatio || window.devicePixelRatio || 1;
+    let devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
 
     // stretch in x or y direction, for example stretch it vertically by 2x for hsbs mode
     let scaleX = options.scaleX || 1;
@@ -715,7 +719,6 @@ export const TieflingView = function (container, image, depthMap, options) {
         containerWidth = container.offsetWidth;
         containerHeight = container.offsetHeight;
         renderer.setSize(containerWidth, containerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
         material.uniforms.resolution.value.set(containerWidth, containerHeight);
         material.uniforms.scaleX.value = scaleX;
         material.uniforms.scaleY.value = scaleY;

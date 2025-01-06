@@ -1,6 +1,7 @@
 :root {
     --color-light: #fff;
     --color-text: #ccc;
+    --color-text-subtle: #888;
     --color-background: #000;
     --color-main: #0085ff;
     --color-border: #222;
@@ -19,6 +20,7 @@ body {
 }
 
 a {
+    color: var(--color-main);
     text-decoration: none;
 }
 
@@ -146,7 +148,12 @@ body {
     border: 1px solid var(--color-border);
     border-radius: 10px;
     width: calc(100vw - 40px);
+
     max-width: 340px;
+    max-height: calc(100vh - 50px - 20px);
+    overflow-x: hidden;
+    overflow-y: auto;
+
 
     & label {
         display: block;
@@ -164,6 +171,7 @@ body {
     .info {
         font-size: 10px;
         margin: 5px 0 5px var(--border-radius);
+        color: var(--color-text-subtle);
     }
 
     & input {
@@ -201,6 +209,14 @@ body {
     .menu-group {
         border-bottom: 1px solid var(--color-border);
         padding: 15px 15px 0 15px;
+
+        &:last-child {
+            border-bottom: none;
+
+            .menu-row {
+                padding-bottom: 16px;
+            }
+        }
     }
 
     .menu-row {
@@ -267,11 +283,21 @@ body {
         grid-template-columns: 1fr 1fr;
         font-size: 10px;
         margin: 5px 0 5px 5px;
+        color: var(--color-text-subtle);
 
         .col.col-right {
             text-align: right;
         }
 
+    }
+}
+
+.about {
+    display: grid;
+    grid-template-columns: 1fr 120px;
+
+    .col.col-right {
+        text-align: right;
     }
 }
 

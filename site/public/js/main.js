@@ -3,8 +3,8 @@ window.Alpine = Alpine;
 
 import { Tiefling } from '/js/tiefling/tiefling.js';
 
-let tiefling = new Tiefling(document.querySelector(".tiefling"), { depthmapSize: 518 });
 
+let tiefling = new Tiefling(document.querySelector(".tiefling"));
 
 Alpine.data('app', () => ({
 
@@ -30,7 +30,15 @@ Alpine.data('app', () => ({
 
     async init() {
 
+        this.loadSettings();
         this.handleURLParams();
+
+        await this.initialLoadImage();
+
+        this.updateDepthmapSize();
+        this.updateFocus();
+        this.updateDevicePixelRatio();
+
         this.handleDragDrop();
 
         // click anywhere outside .menu or.toggle-menu: set menuVisible to false
@@ -40,29 +48,45 @@ Alpine.data('app', () => ({
             }
         });
 
-        // #sbs parameter in url? set body class
-        if (window.location.hash === '#sbs') {
-            document.body.classList.add('sbs');
-        }
-
     },
+
+    // load various settings from local storage
+    loadSettings() {
+        this.depthmapSize = parseInt(localStorage.getItem('depthmapSize')) || this.depthmapSize;
+        this.focus = parseFloat(localStorage.getItem('focus')) || this.focus;
+        this.devicePixelRatio = parseFloat(localStorage.getItem('devicePixelRatio')) || this.devicePixelRatio;
+        this.displayMode = localStorage.getItem('displayMode') || this.displayMode;
+    },
+
+
 
     // handle optional URL parameters
     // ?input={url} - load image from URL, generate depthmap if none given
     // ?depthmap={url} - load depthmap from URL
     // ?displayMode={full, hsbs, fsbs, anaglyph} - set display mode
-    async handleURLParams() {
+    handleURLParams() {
         // ?input parameter? load image from URL
         const urlParams = new URLSearchParams(window.location.search);
-
         if (urlParams.get('input')) {
-
-            // replace all " " with "+"
             this.inputImageURL = urlParams.get('input').replace(/ /g, '+');
+        }
 
-            // ?depthmap parameter? also load depth map from URL
-            if (urlParams.get('depthmap')) {
-                this.depthmapURL = urlParams.get('depthmap');
+        if (urlParams.get('depthmap')) {
+            this.depthmapURL = urlParams.get('depthmap');
+        }
+
+        // set display mode from url param
+        if (urlParams.get("displayMode")) {
+            this.displayMode = this.possibleDisplayModes.contains(urlParams.get("displayMode")) ? urlParams.get("displayMode") : 'full';
+        }
+    },
+
+
+    async initialLoadImage() {
+
+        if (this.inputImageURL) {
+
+            if (this.depthmapURL) {
                 tiefling.load3DImage(this.inputImageURL, this.depthmapURL);
             } else {
                 this.state = "loading";
@@ -71,10 +95,10 @@ Alpine.data('app', () => ({
                 const imageBlob = await fetch(this.inputImageURL).then(response => response.blob());
 
                 // generate depth map
-                this.depthmapURL = await tiefling.getDepthmapURL(imageBlob);
+                console.log("initial load image", this.depthmapSize);
+                this.depthmapURL = await tiefling.getDepthmapURL(imageBlob, this.depthmapSize);
 
                 tiefling.load3DImage(URL.createObjectURL(imageBlob), this.depthmapURL);
-
                 this.state = "idle";
             }
 
@@ -83,11 +107,6 @@ Alpine.data('app', () => ({
             tiefling.load3DImage('img/examples/forest.webp', this.depthmapURL);
         }
 
-        // set display mode from url param
-        if (urlParams.get("displayMode")) {
-            this.displayMode = this.possibleDisplayModes.contains(urlParams.get("displayMode")) ? urlParams.get("displayMode") : 'full';
-            document.cookie = 'displayMode=' + this.displayMode;
-        }
     },
 
 
@@ -245,17 +264,22 @@ Alpine.data('app', () => ({
 
     updateFocus() {
         tiefling.setFocus(this.focus);
+        localStorage.setItem('focus', this.focus);
     },
 
     updateDepthmapSize() {
         tiefling.setDepthmapSize(parseInt(this.depthmapSize));
+        localStorage.setItem('depthmapSize', this.depthmapSize);
     },
 
     updateDevicePixelRatio() {
         tiefling.setDevicePixelRatio(parseFloat(this.devicePixelRatio));
+        localStorage.setItem('devicePixelRatio', this.devicePixelRatio);
     },
 
 
 }));
 
 Alpine.start()
+
+
