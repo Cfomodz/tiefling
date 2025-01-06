@@ -87,7 +87,29 @@
                             Leave empty to generate from input image.
                         </div>
                     </div>
-
+                </div>
+                <div class="menu-row">
+                    <label for="depthmap-quality">Depth Map Quality</label>
+                    <div class="input-range-number">
+                        <div class="col col-range">
+                            <input type="range" id="depthmap-quality" min="256" max="1536" step="1" x-model="depthmapSize" @input="updateDepthmapSize()" list="depthmapSizes">
+                            <datalist id="depthmapSizes">
+                                <option value="518">
+                                <option value="1024">
+                            </datalist>
+                            <div class="range-info">
+                                <div class="col col-left">
+                                    Blocky but Fast
+                                </div>
+                                <div class="col col-right">
+                                    Smooth but Slow
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col col-number">
+                            <input type="number" id="depthmap-quality-number" step="0.01" x-model="depthmapSize" @input="updateDepthmapSize()">
+                        </div>
+                    </div>
                 </div>
                 <div class="menu-row">
                     <button class="button-main" @click="loadImage()">Load Image</button>

@@ -200,14 +200,17 @@ body {
 
     .menu-group {
         border-bottom: 1px solid var(--color-border);
-        padding: 15px 15px 15px 15px;
+        padding: 15px 15px 0 15px;
+    }
+
+    .menu-row {
+        padding-bottom: 20px;
     }
 
 }
 
 .file-upload {
     position: relative;
-    margin-bottom: 20px;
 
     & input[type="url"] {
         padding: 10px 40px 10px 10px;
@@ -250,10 +253,6 @@ body {
     display: grid;
     grid-template-columns: 1fr 70px;
     grid-gap: 10px;
-
-    .col-range {
-        padding-top: 9px;
-    }
 
     & input[type="range"] {
         width: 100%;

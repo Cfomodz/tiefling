@@ -23,6 +23,8 @@ Alpine.data('app', () => ({
     depthmapImageDragActive: false,
     depthmapImage: null,
     depthmapURL: '', // URL of depthmap (generated or loaded externally)
+    depthmapSize: tiefling.getDepthmapSize(),
+
 
     focus: tiefling.getFocus(),
 
@@ -243,6 +245,10 @@ Alpine.data('app', () => ({
 
     updateFocus() {
         tiefling.setFocus(this.focus);
+    },
+
+    updateDepthmapSize() {
+        tiefling.setDepthmapSize(parseInt(this.depthmapSize));
     }
 }));
 

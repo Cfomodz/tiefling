@@ -232,6 +232,10 @@ export const Tiefling = function(container, options = {}) {
             this.depthmapSize = size;
         },
 
+        getDepthmapSize: () => {
+            return this.depthmapSize
+        },
+
         setFocus: (value) => {
             this.focus = value;
             if (view1) {
