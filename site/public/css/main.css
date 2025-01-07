@@ -259,12 +259,15 @@ body {
 
     .preview {
         position: relative;
-        padding-top: 2px;
+        margin-top: 5px;
+        border: 1px solid var(--color-border);
+        background: var(--color-background);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+
+
         & a.preview-image {
             display: block;
-            background: var(--color-background);
-            border-radius: var(--border-radius);
-            overflow: hidden;
         }
         & img {
             display: block;
@@ -280,8 +283,8 @@ body {
             position: absolute;
             top: 3px;
             right: 0;
-            width: 36px;
-            height: 36px;
+            width: 34px;
+            height: 28px;
             color: var(--color-text);
             border-bottom-left-radius: 15px;
 
