@@ -22,7 +22,7 @@ Alpine.data('app', () => ({
     inputImageFile: null,
     inputImageDragActive: false,
     inputImage: null,
-    inputImagePreview: 'asdasd',
+    inputImagePreview: '',
 
     depthmapImageURL: '', // loaded depthmap via url?
     depthmapImageFile: null, // or via file
@@ -104,18 +104,22 @@ Alpine.data('app', () => ({
                 // generate depth map
                 this.depthmapURL = await tiefling.getDepthmapURL(imageBlob, this.depthmapSize);
 
+                this.inputImagePreview = URL.createObjectURL(imageBlob);
+                this.depthmapPreview = this.depthmapURL;
+
                 tiefling.load3DImage(URL.createObjectURL(imageBlob), this.depthmapURL);
                 this.state = "idle";
             }
 
         } else {
-            this.depthmapImageURL = this.depthmapURL = 'img/examples/forest-depthmap.png';
+            this.depthmapImageURL = this.depthmapURL = this.depthmapPreview = 'img/examples/forest-depthmap.png';
             this.inputImageURL = 'img/examples/forest.webp';
+            this.inputImagePreview = this.inputImageURL;
             tiefling.load3DImage(this.inputImageURL, this.depthmapImageURL);
         }
 
-        this.depthmapPreview = this.depthmapImageURL;
-        this.inputImagePreview = this.inputImageURL;
+
+
 
     },
 
