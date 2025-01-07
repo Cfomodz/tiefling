@@ -119,7 +119,10 @@
                     <label for="focus">Focus</label>
                     <div class="input-range-number">
                         <div class="col col-range">
-                            <input type="range" id="focus" min="0" max="1" step="0.01" x-model="focus" @input="updateFocus()">
+                            <input type="range" id="focus" min="0" max="1" step="0.01" x-model="focus" @input="updateFocus()" list="focusList">
+                            <datalist id="focusList">
+                                <option value="0.3">
+                            </datalist>
                             <div class="range-info">
                                 <div class="col col-left">
                                     Rotate
@@ -156,14 +159,20 @@
                 <!--
                 <div class="menu-row">
                     <label>Display Mode</label>
-                    <div class="input-radio-wrap">
-                        <input type="radio" id="display-mode-3d" name="display-mode" value="3d" x-model="displayMode" @change="updateDisplayMode()">
-                        <label for="display-mode-3d">3D</label>
-                        <input type="radio" id="display-mode-2d" name="display-mode" value="2d" x-model="displayMode" @change="updateDisplayMode()">
-                        <label for="display-mode-2d">2D</label>
-
+                    <div class="input-radios">
+                        <div class="labels">
+                            <label for="display-mode-full" :class="displayMode == 'full' ? 'active' : ''">Full</label>
+                            <label for="display-mode-hsbs" :class="displayMode == 'hsbs' ? 'active' : ''">Half SBS</label>
+                            <label for="display-mode-fsbs" :class="displayMode == 'fsbs' ? 'active' : ''">Full SBS</label>
+                            <label for="display-mode-anaglyph" :class="displayMode == 'anaglyph' ? 'active' : ''">Anaglyph</label>
+                        </div>
+                        <input type="radio" id="display-mode-full" name="display-mode" value="full" x-model="displayMode" @change="updateDisplayMode()">
+                        <input type="radio" id="display-mode-hsbs" name="display-mode" value="hsbs" x-model="displayMode" @change="updateDisplayMode()">
+                        <input type="radio" id="display-mode-fsbs" name="display-mode" value="fsbs" x-model="displayMode" @change="updateDisplayMode()">
+                        <input type="radio" id="display-mode-anaglyph" name="display-mode" value="anaglyph" x-model="displayMode" @change="updateDisplayMode()">
                     </div>
-                </div>-->
+                </div>
+                -->
             </div>
             <div class="menu-group">
                 <div class="menu-row">

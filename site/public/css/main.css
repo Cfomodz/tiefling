@@ -154,7 +154,7 @@ body {
     overflow-x: hidden;
     overflow-y: auto;
 
-    box-shadow: rgba(0,0,0,0.5) 0 10px 20px;
+    font-size: 14px;
 
 
     & label {
@@ -186,6 +186,10 @@ body {
         border: 1px solid var(--color-border);
         border-radius: var(--border-radius);
 
+        @media (max-width: 500px) {
+            font-size: 16px;
+        }
+
         &:focus {
             outline: none;
             border-color: var(--color-main);
@@ -216,7 +220,7 @@ body {
             border-bottom: none;
 
             .menu-row {
-                padding-bottom: 16px;
+                padding-bottom: 15px;
             }
         }
     }
@@ -294,6 +298,53 @@ body {
     }
 }
 
+.input-radios {
+
+    & .col {
+        width: 25%;
+        white-space: nowrap;
+    }
+
+    & input {
+        display: none;
+    }
+    & label {
+        display: inline-block;
+    }
+
+    .labels {
+        display: flex;
+        border-radius: var(--border-radius);
+        border: 1px solid var(--color-border);
+        overflow: hidden;
+
+        & label {
+            flex: 1;
+            text-align: center;
+            padding: 10px 0;
+            border-left: 1px solid var(--color-border);
+            margin: 0;
+
+            &:first-child {
+                border-left: none;
+            }
+
+            &.active {
+                color: var(--color-light);
+                background: var(--color-main);
+                border-left-color: var(--color-main);
+            }
+
+            /* the label before and left to the .active label */
+            &.active + label {
+                border-left-color: var(--color-main);
+            }
+
+        }
+    }
+
+}
+
 .about {
     display: grid;
     grid-template-columns: 1fr 120px;
@@ -312,4 +363,5 @@ body {
     border-radius: var(--border-radius);
     border: none;
     cursor: pointer;
+    font-size: 14px;
 }

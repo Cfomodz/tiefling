@@ -3,8 +3,13 @@ window.Alpine = Alpine;
 
 import { Tiefling } from '/js/tiefling/tiefling.js';
 
-
 let tiefling = new Tiefling(document.querySelector(".tiefling"));
+
+URLSearchParams.prototype.getRaw = function(param) {
+    const regex = new RegExp(`[?&]${param}=([^&]+)`, 'i');
+    const match = window.location.search.match(regex);
+    return match ? match[1] : null;
+};
 
 Alpine.data('app', () => ({
 
@@ -68,11 +73,11 @@ Alpine.data('app', () => ({
         // ?input parameter? load image from URL
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('input')) {
-            this.inputImageURL = urlParams.get('input').replace(/ /g, '+');
+            this.inputImageURL = urlParams.getRaw('input');
         }
 
         if (urlParams.get('depthmap')) {
-            this.depthmapURL = urlParams.get('depthmap');
+            this.depthmapURL = urlParams.getRaw('depthmap');
         }
 
         // set display mode from url param
@@ -276,6 +281,11 @@ Alpine.data('app', () => ({
         tiefling.setDevicePixelRatio(parseFloat(this.devicePixelRatio));
         localStorage.setItem('devicePixelRatio', this.devicePixelRatio);
     },
+
+    updateDisplayMode() {
+        console.log(this.displayMode);
+        localStorage.setItem('displayMode', this.displayMode);
+    }
 
 
 }));
