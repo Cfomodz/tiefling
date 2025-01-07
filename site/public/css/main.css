@@ -152,8 +152,6 @@ body {
 
     max-width: 350px;
     max-height: calc(100vh - 50px - 20px);
-    overflow-x: hidden;
-    overflow-y: auto;
 
     font-size: 14px;
 
@@ -270,7 +268,7 @@ body {
         }
         & img {
             display: block;
-            max-height: 90px;
+            max-height: 100px;
             min-height: 30px;
             max-width: 100%;
             margin: 0 auto;
@@ -405,4 +403,10 @@ body {
     border: none;
     cursor: pointer;
     font-size: 14px;
+}
+
+.simplebar-vertical .simplebar-scrollbar:before {
+    left: 2px;
+    right: 6px;
+    background-color: var(--color-text);
 }
