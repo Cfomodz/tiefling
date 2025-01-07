@@ -278,12 +278,12 @@ body {
             justify-content: center;
             align-items: center;
             position: absolute;
-            top: 5px;
+            top: 3px;
             right: 0;
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             color: var(--color-text);
-            border-bottom-left-radius: var(--border-radius);
+            border-bottom-left-radius: 15px;
 
             &:hover {
                 color: var(--color-main);
@@ -292,6 +292,7 @@ body {
             & svg {
                 width: 16px;
                 height: 16px;
+                transform: translate(-2px, 2px);
             }
         }
     }
