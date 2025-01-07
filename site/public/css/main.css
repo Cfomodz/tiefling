@@ -3,6 +3,7 @@
     --color-text: #ccc;
     --color-text-subtle: #888;
     --color-background: #000;
+    --color-background-transparent: rgba(20,20,20,0.8);
     --color-main: #0085ff;
     --color-border: #222;
 
@@ -143,13 +144,13 @@ body {
     position: absolute;
     top: 50px;
     right: 20px;
-    background: rgba(20,20,20,0.8);
+    background: var(--color-background-transparent);
     backdrop-filter: blur(10px);
     border: 1px solid var(--color-border);
     border-radius: 10px;
     width: calc(100vw - 40px);
 
-    max-width: 340px;
+    max-width: 350px;
     max-height: calc(100vh - 50px - 20px);
     overflow-x: hidden;
     overflow-y: auto;
@@ -194,17 +195,6 @@ body {
             outline: none;
             border-color: var(--color-main);
         }
-
-        &.dragging {
-            border-color: var(--color-main);
-            background: var(--color-main);
-            color: var(--color-border);
-
-            &::placeholder {
-                color: var(--color-border);
-            }
-        }
-
 
         &[type="range"] {
             height: auto;
@@ -266,6 +256,57 @@ body {
 
         &:hover svg {
             color: var(--color-main);
+        }
+    }
+
+    .preview {
+        position: relative;
+        padding-top: 2px;
+        & a.preview-image {
+            display: block;
+            background: var(--color-background);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+        & img {
+            display: block;
+            max-height: 100px;
+            min-height: 30px;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        & a.remove {
+            display: grid;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            top: 5px;
+            right: 0;
+            width: 30px;
+            height: 30px;
+            color: var(--color-text);
+            border-bottom-left-radius: var(--border-radius);
+
+            &:hover {
+                color: var(--color-main);
+            }
+
+            & svg {
+                width: 16px;
+                height: 16px;
+            }
+        }
+    }
+
+    &.dragging {
+        & input[type="url"] {
+            border-color: var(--color-main);
+            background: var(--color-main);
+            color: var(--color-border);
+
+            &::placeholder {
+                color: var(--color-border);
+            }
         }
     }
 
