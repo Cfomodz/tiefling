@@ -46,11 +46,9 @@ export const Tiefling = function(container, options = {}) {
             view1.destroy();
         }
 
-        if (this.displayMode === 'hsbs') {
+        if (this.displayMode === 'hsbs' || this.displayMode === 'fsbs' || this.displayMode === 'anaglyph') {
 
-            view1 = TieflingView(container.querySelector('.inner .container-1'), image, depthMap, {
-                mouseXOffset: 0.3,
-                scaleY: 2,
+            view1 = TieflingView(container.querySelector('.inner .container-left'), image, depthMap, {
                 focus: this.focus,
                 devicePixelRatio: this.devicePixelRatio,
             });
@@ -58,13 +56,13 @@ export const Tiefling = function(container, options = {}) {
             if (view2) {
                 view2.destroy();
             }
-            view2 = TieflingView(container.querySelector('.inner .container-2'), image, depthMap, {
-                scaleY: 2,
+            view2 = TieflingView(container.querySelector('.inner .container-right'), image, depthMap, {
+                mouseXOffset: 0.3,
                 focus: this.focus,
                 devicePixelRatio: this.devicePixelRatio,
             });
         } else {
-            view1 = TieflingView(container.querySelector('.inner .container-1'), image, depthMap, {
+            view1 = TieflingView(container.querySelector('.inner .container-left'), image, depthMap, {
                 mouseXOffset: 0,
                 focus: this.focus,
                 devicePixelRatio: this.devicePixelRatio,
@@ -165,19 +163,19 @@ export const Tiefling = function(container, options = {}) {
     });
 
 
-    // create elements. container > div.inner > div.container.container-1|.container-2
+    // create elements. tiefling-container > div.inner > div.container.container-left|.container-right
     let inner = document.createElement('div');
     inner.classList.add('inner');
     container.appendChild(inner);
 
     let container1 = document.createElement('div');
     container1.classList.add('container');
-    container1.classList.add('container-1');
+    container1.classList.add('container-left');
     inner.appendChild(container1);
 
     let container2 = document.createElement('div');
     container2.classList.add('container');
-    container2.classList.add('container-2');
+    container2.classList.add('container-right');
     inner.appendChild(container2);
 
     // add unique class to container
@@ -198,30 +196,52 @@ export const Tiefling = function(container, options = {}) {
         .${containerClass} .inner .container {
             overflow: hidden;
         }
-        
-        .${containerClass}.hsbs {
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        .${containerClass} .inner .container-right {
+            display: none;
         }
-        
-        .${containerClass}.hsbs .inner {
-            aspect-ratio: 16 / 9;
-            width: auto;
-            height: auto;
-            max-width: 100vw;
-            max-height: 100vh;
-            min-width: min(100vw, calc(100vh * 16/9));
-            min-height: min(100vh, calc(100vw * 9/16));
+                
+         /* Full/Half Side-by-Side: Stretch container by 2x, put two containers side by side, scale container down again */       
+        .${containerClass}.hsbs .inner,
+        .${containerClass}.fsbs .inner {
+            width: 200vw;
+            height: 100vh;
             grid-template-columns: 1fr 1fr;
         }
-        .${containerClass}.hsbs .inner .container {
-            width: 100%;
-            height: 100%;
-            aspect-ratio: 8 / 9;
+        .${containerClass}.hsbs .inner .container,
+        .${containerClass}.fsbs .inner .container {
+            width: 100vw;
+            height: 100vh;            
         }
-        .${containerClass} .inner .container-2 {
-            display: none; // for now
+        .${containerClass}.hsbs .inner .container-right,
+        .${containerClass}.fsbs .inner .container-right {
+            display: block;
+        }
+        .${containerClass}.hsbs .inner {
+            transform: scaleX(0.5);
+        }
+        .${containerClass}.fsbs .inner {
+            transform: scale(0.5);
+        }
+        
+        /* Anaglyph mode: Render containers on top of each other, with red/blue filters */
+        .${containerClass}.anaglyph .inner {
+            display: block;
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        .${containerClass}.anaglyph .inner .container {
+            display: block;
+            position: absolute;
+            width: 100vw;
+            height: 100vh;
+        }
+        .${containerClass}.anaglyph .inner .container.container-left {     
+            filter: grayscale(100%) sepia(100%) saturate(1000%) hue-rotate(-30deg); /* red tint */
+        }
+        .${containerClass}.anaglyph .inner .container.container-right {         
+            filter: grayscale(100%) sepia(100%) saturate(1000%) hue-rotate(180deg); /* blue tint */
+            opacity: 0.5;
         }
     `;
     document.head.appendChild(style);
@@ -272,6 +292,14 @@ export const Tiefling = function(container, options = {}) {
 
         getPossibleDisplayModes: () => {
             return possibleDisplayModes;
+        },
+
+        setDisplayMode: (mode) => {
+            this.displayMode = mode;
+            container.classList.remove('hsbs');
+            container.classList.remove('fsbs');
+            container.classList.remove('anaglyph');
+            container.classList.add(this.displayMode);
         }
 
     }
@@ -500,10 +528,6 @@ export const TieflingView = function (container, image, depthMap, options) {
     let mouseSensitivity = options.mouseSensitivity || 10;
     let devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
 
-    // stretch in x or y direction, for example stretch it vertically by 2x for hsbs mode
-    let scaleX = options.scaleX || 1;
-    let scaleY = options.scaleY || 1;
-
     let scene, camera, renderer, quad;
     let mouseX = 0, mouseY = 0;
     let targetX = 0, targetY = 0;
@@ -523,9 +547,7 @@ export const TieflingView = function (container, image, depthMap, options) {
             textureResolution: { value: new THREE.Vector2(1, 1) },
             focus: { value: focus },
             scale: { value: 0.0125 },
-            enlarge: { value: 1.06 },
-            scaleX: { value: scaleX },
-            scaleY: { value: scaleY }
+            enlarge: { value: 1.06 }
         },
         vertexShader: `
                     varying vec2 vUv;
@@ -544,9 +566,7 @@ export const TieflingView = function (container, image, depthMap, options) {
                 uniform vec2 textureResolution;
                 uniform float focus;
                 uniform float scale;
-                uniform float enlarge;
-                uniform float scaleX;
-                uniform float scaleY;
+                uniform float enlarge;                
                 varying vec2 vUv;
             
                 #define MAXSTEPS 128.0
@@ -570,9 +590,6 @@ export const TieflingView = function (container, image, depthMap, options) {
                         scale.x = (imageRatio / containerRatio);
                         scale.y = 1.0;
                     }
-                    
-                    // Apply vertical stretch for SBS mode
-                    scale.y *= scaleY;
                     
                     // Center the image
                     offset = (1.0 - scale) * 0.5;
@@ -726,8 +743,6 @@ export const TieflingView = function (container, image, depthMap, options) {
         containerHeight = container.offsetHeight;
         renderer.setSize(containerWidth, containerHeight);
         material.uniforms.resolution.value.set(containerWidth, containerHeight);
-        material.uniforms.scaleX.value = scaleX;
-        material.uniforms.scaleY.value = scaleY;
     };
 
     window.addEventListener('resize', onResize);

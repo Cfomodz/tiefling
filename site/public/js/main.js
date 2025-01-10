@@ -22,14 +22,14 @@ Alpine.data('app', () => ({
     inputImageFile: null,
     inputImageDragActive: false,
     inputImage: null,
-    inputImagePreview: '',
+    inputDataURL: '',
 
     depthmapImageURL: '', // loaded depthmap via url?
     depthmapImageFile: null, // or via file
     depthmapImageDragActive: false,
     depthmapImage: null,
     depthmapURL: '', // URL of depthmap (generated or loaded externally)
-    depthmapPreview: '', // URL to loaded image
+    depthmapDataURL: '', // URL to loaded image
     depthmapSize: tiefling.getDepthmapSize(),
 
     focus: tiefling.getFocus(),
@@ -91,6 +91,8 @@ Alpine.data('app', () => ({
 
     async initialLoadImage() {
 
+        tiefling.setDisplayMode(this.displayMode);
+
         if (this.inputImageURL) {
 
             if (this.depthmapURL) {
@@ -104,17 +106,17 @@ Alpine.data('app', () => ({
                 // generate depth map
                 this.depthmapURL = await tiefling.getDepthmapURL(imageBlob, this.depthmapSize);
 
-                this.inputImagePreview = URL.createObjectURL(imageBlob);
-                this.depthmapPreview = this.depthmapURL;
+                this.inputDataURL = URL.createObjectURL(imageBlob);
+                this.depthmapDataURL = this.depthmapURL;
 
                 tiefling.load3DImage(URL.createObjectURL(imageBlob), this.depthmapURL);
                 this.state = "idle";
             }
 
         } else {
-            this.depthmapImageURL = this.depthmapURL = this.depthmapPreview = 'img/examples/forest-depthmap.png';
+            this.depthmapImageURL = this.depthmapURL = this.depthmapDataURL = 'img/examples/forest-depthmap.png';
             this.inputImageURL = 'img/examples/forest.webp';
-            this.inputImagePreview = this.inputImageURL;
+            this.inputDataURL = this.inputImageURL;
             tiefling.load3DImage(this.inputImageURL, this.depthmapImageURL);
         }
 
@@ -147,8 +149,8 @@ Alpine.data('app', () => ({
             try {
                 this.state = "loading";
                 this.depthmapURL = await tiefling.getDepthmapURL(file);
-                this.depthmapPreview = this.depthmapURL;
-                this.inputImagePreview = URL.createObjectURL(file);
+                this.depthmapDataURL = this.depthmapURL;
+                this.inputDataURL = URL.createObjectURL(file);
                 await tiefling.load3DImage(URL.createObjectURL(file), this.depthmapURL);
                 this.state = "idle";
             } catch (error) {
@@ -169,7 +171,7 @@ Alpine.data('app', () => ({
         this.inputImageURL = "";
         this.inputImageFile = file;
 
-        this.inputImagePreview = URL.createObjectURL(file);
+        this.inputDataURL = URL.createObjectURL(file);
     },
 
     // Handle file drop on input field
@@ -188,7 +190,7 @@ Alpine.data('app', () => ({
             this.inputImageURL = "";
 
             this.inputImageFile = file;
-            this.inputImagePreview = URL.createObjectURL(file);
+            this.inputDataURL = URL.createObjectURL(file);
 
         } catch (error) {
             console.error("Error while handling dropped file:", error);
@@ -203,7 +205,7 @@ Alpine.data('app', () => ({
         this.depthmapImageURL = "Uploaded file";
         this.depthmapImageFile = file;
 
-        this.depthmapPreview = URL.createObjectURL(file);
+        this.depthmapDataURL = URL.createObjectURL(file);
     },
 
 
@@ -222,7 +224,7 @@ Alpine.data('app', () => ({
             this.depthmapImageDragActive = false;
             this.depthmapImageURL = "Uploaded file";
             this.depthmapImageFile = file;
-            this.depthmapPreview = URL.createObjectURL(file);
+            this.depthmapDataURL = URL.createObjectURL(file);
 
         } catch (error) {
             console.error("Error while handling dropped file:", error);
@@ -231,11 +233,11 @@ Alpine.data('app', () => ({
     },
 
     removeDepthmap() {
-        this.depthmapImage = this.depthmapImageFile = this.depthmapImageURL = this.depthmapURL = this.depthmapPreview = null;
+        this.depthmapImage = this.depthmapImageFile = this.depthmapImageURL = this.depthmapURL = this.depthmapDataURL = null;
     },
 
     removeInputImage() {
-        this.inputImage = this.inputImageFile = this.inputImageURL = this.inputImagePreview = null;
+        this.inputImage = this.inputImageFile = this.inputImageURL = this.inputDataURL = null;
     },
 
     async loadImage() {
@@ -276,8 +278,8 @@ Alpine.data('app', () => ({
 
         }
 
-        this.depthmapPreview = URL.createObjectURL(this.depthmapImage);
-        this.inputImagePreview = URL.createObjectURL(this.inputImage);
+        this.depthmapDataURL = URL.createObjectURL(this.depthmapImage);
+        this.inputDataURL = URL.createObjectURL(this.inputImage);
 
         // add ?input (and optional &depthmap) parameter to history, if the urls start with https
         if (inputURL.match(/^https?:\/\//)) {
@@ -311,8 +313,11 @@ Alpine.data('app', () => ({
     },
 
     updateDisplayMode() {
-        console.log(this.displayMode);
         localStorage.setItem('displayMode', this.displayMode);
+
+        // re-init 3d view
+        tiefling.setDisplayMode(this.displayMode);
+        tiefling.load3DImage(this.inputDataURL, this.depthmapDataURL);
     }
 
 

@@ -60,9 +60,9 @@
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12.5858L16.2426 16.8284L14.8284 18.2426L13 16.415V22H11V16.413L9.17157 18.2426L7.75736 16.8284L12 12.5858ZM12 2C15.5934 2 18.5544 4.70761 18.9541 8.19395C21.2858 8.83154 23 10.9656 23 13.5C23 16.3688 20.8036 18.7246 18.0006 18.9776L18.0009 16.9644C19.6966 16.7214 21 15.2629 21 13.5C21 11.567 19.433 10 17.5 10C17.2912 10 17.0867 10.0183 16.8887 10.054C16.9616 9.7142 17 9.36158 17 9C17 6.23858 14.7614 4 12 4C9.23858 4 7 6.23858 7 9C7 9.36158 7.03838 9.7142 7.11205 10.0533C6.91331 10.0183 6.70879 10 6.5 10C4.567 10 3 11.567 3 13.5C3 15.2003 4.21241 16.6174 5.81986 16.934L6.00005 16.9646L6.00039 18.9776C3.19696 18.7252 1 16.3692 1 13.5C1 10.9656 2.71424 8.83154 5.04648 8.19411C5.44561 4.70761 8.40661 2 12 2Z"></path></svg>
                         </button>
                         <input type="file" id="input-image-file" accept="image/*" style="display: none;" x-ref="inputImageFile" @change="handleInputImageFile($event)">
-                        <div class="preview" x-show="inputImagePreview">
-                            <a :href="inputImagePreview" class="preview-image" target="_blank">
-                                <img :src="inputImagePreview" alt="Input Image">
+                        <div class="preview" x-show="inputDataURL">
+                            <a :href="inputDataURL" class="preview-image" target="_blank">
+                                <img :src="inputDataURL" alt="Input Image">
                             </a>
                             <a href="#" class="remove" @click.prevent="removeInputImage()" title="Remove Input Image">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 10.5858L9.17157 7.75736L7.75736 9.17157L10.5858 12L7.75736 14.8284L9.17157 16.2426L12 13.4142L14.8284 16.2426L16.2426 14.8284L13.4142 12L16.2426 9.17157L14.8284 7.75736L12 10.5858Z"></path></svg>
@@ -93,9 +93,9 @@
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12.5858L16.2426 16.8284L14.8284 18.2426L13 16.415V22H11V16.413L9.17157 18.2426L7.75736 16.8284L12 12.5858ZM12 2C15.5934 2 18.5544 4.70761 18.9541 8.19395C21.2858 8.83154 23 10.9656 23 13.5C23 16.3688 20.8036 18.7246 18.0006 18.9776L18.0009 16.9644C19.6966 16.7214 21 15.2629 21 13.5C21 11.567 19.433 10 17.5 10C17.2912 10 17.0867 10.0183 16.8887 10.054C16.9616 9.7142 17 9.36158 17 9C17 6.23858 14.7614 4 12 4C9.23858 4 7 6.23858 7 9C7 9.36158 7.03838 9.7142 7.11205 10.0533C6.91331 10.0183 6.70879 10 6.5 10C4.567 10 3 11.567 3 13.5C3 15.2003 4.21241 16.6174 5.81986 16.934L6.00005 16.9646L6.00039 18.9776C3.19696 18.7252 1 16.3692 1 13.5C1 10.9656 2.71424 8.83154 5.04648 8.19411C5.44561 4.70761 8.40661 2 12 2Z"></path></svg>
                         </button>
                         <input type="file" id="depthmap-image-file" accept="image/*" style="display: none;" x-ref="depthmapImageFile" @change="handleDepthmapImageFile($event)">
-                        <div class="preview" x-show="depthmapPreview">
-                            <a :href="depthmapPreview" class="preview-image" target="_blank">
-                                <img :src="depthmapPreview" alt="Depth Map">
+                        <div class="preview" x-show="depthmapDataURL">
+                            <a :href="depthmapDataURL" class="preview-image" target="_blank">
+                                <img :src="depthmapDataURL" alt="Depth Map">
                             </a>
                             <a href="#" class="remove" @click.prevent="removeDepthmap()" title="Remove Depth Map">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22ZM12 10.5858L9.17157 7.75736L7.75736 9.17157L10.5858 12L7.75736 14.8284L9.17157 16.2426L12 13.4142L14.8284 16.2426L16.2426 14.8284L13.4142 12L16.2426 9.17157L14.8284 7.75736L12 10.5858Z"></path></svg>
@@ -178,7 +178,6 @@
                         </div>
                     </div>
                 </div>
-                <!--
                 <div class="menu-row">
                     <label>Display Mode</label>
                     <div class="input-radios">
@@ -194,7 +193,6 @@
                         <input type="radio" id="display-mode-anaglyph" name="display-mode" value="anaglyph" x-model="displayMode" @change="updateDisplayMode()">
                     </div>
                 </div>
-                -->
             </div>
             <div class="menu-group">
                 <div class="menu-row">
