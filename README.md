@@ -10,3 +10,8 @@ Needs a beefy computer. Works fastest in Chrome.
 - Icon by [Remix Icon](https://remixicon.com/), [Apache License](https://github.com/Remix-Design/remixicon/blob/master/License)
 - Rafał Lindemanns [Depthy](https://depthy.stamina.pl/#/) for inspiration and some code
 - [immersity.ai](https://www.immersity.ai/) for inspiration.
+
+## Todo
+
+- Anaglyph View
+- Better background fill that's still fast. Suggestions welcome.
