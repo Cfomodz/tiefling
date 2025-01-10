@@ -2,6 +2,8 @@
 
 Generates a depth map from an image and shows it in an interactive 3D (or 2.5D parallax) view. Runs completely in your browser.
 
+Needs a beefy computer. Works fastest in Chrome.
+
 ## Thanks to
 
 - [akbartus DepthAnything-on-Browser](https://github.com/akbartus/DepthAnything-on-Browser) for Depth Anything V2 JS version
