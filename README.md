@@ -1,6 +1,7 @@
 # 2D-to-3D image generator and viewer
 
 Runs locally and privately in your browser.  
+
 Needs a beefy computer and works fastest in Chrome.
 
 ## Loading images
