@@ -208,13 +208,13 @@ body {
             border-bottom: none;
 
             .menu-row {
-                padding-bottom: 15px;
+                margin-bottom: 15px;
             }
         }
     }
 
     .menu-row {
-        padding-bottom: 20px;
+        margin-bottom: 20px;
     }
 
 }
