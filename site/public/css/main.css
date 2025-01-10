@@ -55,31 +55,6 @@ body {
     justify-content: center;
 }
 
-.sbs .tiefling {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-.sbs .tiefling .inner {
-    aspect-ratio: 16 / 9;
-    width: auto;
-    height: auto;
-    max-width: 100vw;
-    max-height: 100vh;
-    min-width: min(100vw, calc(100vh * 16/9));
-    min-height: min(100vh, calc(100vw * 9/16));
-    grid-template-columns: 1fr 1fr;
-}
-.sbs .tiefling .container {
-    width: 100%;
-    height: 100%;
-    aspect-ratio: 8 / 9;
-}
-
-.sbs .tiefling .container-2 {
-    display: block;
-}
-
 .controls {
     position: fixed;
     top: 0;
