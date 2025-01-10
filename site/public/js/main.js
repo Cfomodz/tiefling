@@ -34,6 +34,7 @@ Alpine.data('app', () => ({
 
     focus: tiefling.getFocus(),
     devicePixelRatio: tiefling.getDevicePixelRatio(),
+    mouseXOffset: 0.3, // for hsbs, fsbs and anaglyph modes. 0 0 no 3d, 0.3 is a good default
 
     fullscreen: false, // fullscreen selected?
 
@@ -65,6 +66,7 @@ Alpine.data('app', () => ({
         this.focus = parseFloat(localStorage.getItem('focus')) || this.focus;
         this.devicePixelRatio = parseFloat(localStorage.getItem('devicePixelRatio')) || this.devicePixelRatio;
         this.displayMode = localStorage.getItem('displayMode') || this.displayMode;
+        this.mouseXOffset = parseFloat(localStorage.getItem('mouseXOffset')) || this.mouseXOffset;
     },
 
 
@@ -320,6 +322,11 @@ Alpine.data('app', () => ({
         // re-init 3d view
         tiefling.setDisplayMode(this.displayMode);
         tiefling.load3DImage(this.inputDataURL, this.depthmapDataURL);
+    },
+
+    updateMouseXOffset() {
+        localStorage.setItem('mouseXOffset', this.mouseXOffset);
+        tiefling.setMouseXOffset(this.mouseXOffset);
     },
 
 

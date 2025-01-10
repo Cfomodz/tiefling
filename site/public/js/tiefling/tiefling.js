@@ -17,12 +17,14 @@ export const Tiefling = function(container, options = {}) {
     this.depthmapSize = options.depthmapSize || 518;
     this.focus = options.focus || 0.3;
     this.devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
+    this.mouseXOffset = options.mouseXOffset || 0.3;
 
 
     let view1, view2;
     let lastMouseMovementTime = Date.now();
 
     const onMouseMove = (event, manual = true) => {
+
         if (manual) {
             lastMouseMovementTime = Date.now();
         }
@@ -31,7 +33,11 @@ export const Tiefling = function(container, options = {}) {
             view1.onMouseMove(event);
         }
         if (view2) {
-            view2.onMouseMove(event);
+            let view2Event = new MouseEvent(event.type, {
+                clientX: event.clientX + (container.offsetWidth / 2),
+                clientY: event.clientY
+            });
+            view2.onMouseMove(view2Event);
         }
     }
 
@@ -57,7 +63,7 @@ export const Tiefling = function(container, options = {}) {
                 view2.destroy();
             }
             view2 = TieflingView(container.querySelector('.inner .container-right'), image, depthMap, {
-                mouseXOffset: -0.3,
+                mouseXOffset: -this.mouseXOffset,
                 focus: this.focus,
                 devicePixelRatio: this.devicePixelRatio,
             });
@@ -229,6 +235,7 @@ export const Tiefling = function(container, options = {}) {
             position: relative;
             width: 100vw;
             height: 100vh;
+            filter: saturate(0.75);
         }
         .${containerClass}.anaglyph .inner .container {
             display: block;
@@ -237,11 +244,16 @@ export const Tiefling = function(container, options = {}) {
             height: 100vh;
         }
         .${containerClass}.anaglyph .inner .container.container-left {     
-            filter: grayscale(100%) sepia(100%) saturate(1000%) hue-rotate(-30deg); /* red tint */
+            background: red;
+            background-blend-mode: lighten;
         }
         .${containerClass}.anaglyph .inner .container.container-right {         
-            filter: grayscale(100%) sepia(100%) saturate(1000%) hue-rotate(180deg); /* blue tint */
-            opacity: 0.5;
+            background: cyan;
+            background-blend-mode: lighten;
+            mix-blend-mode: darken;            
+        }
+        .${containerClass}.anaglyph .inner .container canvas {         
+            mix-blend-mode: lighten;
         }
     `;
     document.head.appendChild(style);
@@ -300,6 +312,13 @@ export const Tiefling = function(container, options = {}) {
             container.classList.remove('fsbs');
             container.classList.remove('anaglyph');
             container.classList.add(this.displayMode);
+        },
+
+        setMouseXOffset: (value) => {
+            this.mouseXOffset = value;
+            if (view2) {
+                view2.setMouseXOffset(-this.mouseXOffset);
+            }
         }
 
     }
@@ -523,7 +542,7 @@ export const generateDepthmap = function(imageFile, options = {}) {
  */
 export const TieflingView = function (container, image, depthMap, options) {
 
-    let mouseXOffset = options.mouseXOffset || 0; // 0 (0vw) to 1 (100vw)
+    let mouseXOffset = options.mouseXOffset || 0;
     let focus = options.focus || 0.3; // 1: strafe camera, good for sbs view. 0.3: rotate around some middle point
     let mouseSensitivity = options.mouseSensitivity || 10;
     let devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
@@ -801,6 +820,10 @@ export const TieflingView = function (container, image, depthMap, options) {
             if (renderer) {
                 renderer.setPixelRatio(devicePixelRatio);
             }
+        },
+
+        setMouseXOffset: function(value) {
+            mouseXOffset = value;
         }
     };
 

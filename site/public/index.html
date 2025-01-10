@@ -185,13 +185,37 @@
                             <label for="display-mode-full" :class="displayMode == 'full' ? 'active' : ''">Full</label>
                             <label for="display-mode-hsbs" :class="displayMode == 'hsbs' ? 'active' : ''">Half SBS</label>
                             <label for="display-mode-fsbs" :class="displayMode == 'fsbs' ? 'active' : ''">Full SBS</label>
-                            <label for="display-mode-anaglyph" :class="displayMode == 'anaglyph' ? 'active' : ''">Anaglyph</label>
+                            <!--<label for="display-mode-anaglyph" :class="displayMode == 'anaglyph' ? 'active' : ''">Anaglyph</label>-->
                         </div>
                         <input type="radio" id="display-mode-full" name="display-mode" value="full" x-model="displayMode" @change="updateDisplayMode()">
                         <input type="radio" id="display-mode-hsbs" name="display-mode" value="hsbs" x-model="displayMode" @change="updateDisplayMode()">
                         <input type="radio" id="display-mode-fsbs" name="display-mode" value="fsbs" x-model="displayMode" @change="updateDisplayMode()">
-                        <input type="radio" id="display-mode-anaglyph" name="display-mode" value="anaglyph" x-model="displayMode" @change="updateDisplayMode()">
+                        <!--<input type="radio" id="display-mode-anaglyph" name="display-mode" value="anaglyph" x-model="displayMode" @change="updateDisplayMode()">-->
                     </div>
+                </div>
+                <div class="menu-row" x-show="displayMode == 'fsbs' || displayMode == 'hsbs' || displayMode == 'anaglyph'">
+                    <label>3D Strength / IPD</label>
+                    <div class="input-range-number">
+                        <div class="col col-range">
+                            <input type="range" id="mouseXOffset" min="0" max="1" step="0.01" x-model="mouseXOffset" @input="updateMouseXOffset()" list="mouseXOffsetList">
+                            <datalist id="mouseXOffsetList">
+                                <option value="0.3">
+                            </datalist>
+                            <div class="range-info">
+                                <div class="col col-left">
+                                    None
+                                </div>
+                                <div class="col col-right">
+                                    Whoa
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col col-number">
+                            <input type="number" id="mouseXOffset-number" min="0" step="0.01" x-model="mouseXOffset" @input="updateMouseXOffset()">
+                        </div>
+                    </div>
+                </div>
+                <div class="menu-row">
                     <div class="input-checkbox">
                         <input type="checkbox" id="fullscreen" @change="toggleFullscreen()" x-model="fullscreen">
                         <label for="fullscreen">Fullscreen</label>
