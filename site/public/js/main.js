@@ -35,6 +35,8 @@ Alpine.data('app', () => ({
     focus: tiefling.getFocus(),
     devicePixelRatio: tiefling.getDevicePixelRatio(),
 
+    fullscreen: false, // fullscreen selected?
+
     async init() {
 
         this.loadSettings();
@@ -318,6 +320,23 @@ Alpine.data('app', () => ({
         // re-init 3d view
         tiefling.setDisplayMode(this.displayMode);
         tiefling.load3DImage(this.inputDataURL, this.depthmapDataURL);
+    },
+
+
+    toggleFullscreen() {
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        } else {
+            document.body.requestFullscreen();
+        }
+
+        // if user presses esc or something and exits fullscreen:
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                this.fullscreen = false;
+            }
+        });
+
     }
 
 

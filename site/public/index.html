@@ -192,6 +192,10 @@
                         <input type="radio" id="display-mode-fsbs" name="display-mode" value="fsbs" x-model="displayMode" @change="updateDisplayMode()">
                         <input type="radio" id="display-mode-anaglyph" name="display-mode" value="anaglyph" x-model="displayMode" @change="updateDisplayMode()">
                     </div>
+                    <div class="input-checkbox">
+                        <input type="checkbox" id="fullscreen" @change="toggleFullscreen()" x-model="fullscreen">
+                        <label for="fullscreen">Fullscreen</label>
+                    </div>
                 </div>
             </div>
             <div class="menu-group">

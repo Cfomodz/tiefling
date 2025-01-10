@@ -57,7 +57,7 @@ export const Tiefling = function(container, options = {}) {
                 view2.destroy();
             }
             view2 = TieflingView(container.querySelector('.inner .container-right'), image, depthMap, {
-                mouseXOffset: 0.3,
+                mouseXOffset: -0.3,
                 focus: this.focus,
                 devicePixelRatio: this.devicePixelRatio,
             });

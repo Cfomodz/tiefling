@@ -343,6 +343,8 @@ body {
 
 .input-radios {
 
+    margin-bottom: 15px;
+
     & .col {
         width: 25%;
         white-space: nowrap;
@@ -386,6 +388,22 @@ body {
         }
     }
 
+}
+
+.input-checkbox {
+    margin-bottom: 15px;
+
+    & input {
+        display: inline-block;
+        width: auto;
+        height: auto;
+        margin: 0 3px 0 0;
+        transform: translateY(2px);
+    }
+    & label {
+        display: inline-block;
+        margin: 0;
+    }
 }
 
 .about {
