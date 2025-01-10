@@ -19,6 +19,10 @@ Move your mouse to change perspective. If it feels choppy, adjust the `Render Qu
 
 *Work In Progress:* To view images in real 3D, mirror your computer screen to your VR headset. [Virtual Desktop](https://www.vrdesktop.net/) works well. Switch to `Half SBS` or `Full SBS` in the Tiefling menu, then do the same in Virtual Desktop. Works best in fullscreen. Switch back to normal view in Virtual Desktop to adjust settings.  
 
+## Hosting
+
+It's a static website, all the 3D generation happens in your browser. So, host the contents of the `public` folder yourself however you like. But give it its own domain, it's not tested to work in subfolders yet.
+
 ## Todo
 
 - Make interface usable in HSBS and FSBS VR views.
