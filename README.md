@@ -13,5 +13,6 @@ Needs a beefy computer. Works fastest in Chrome.
 
 ## Todo
 
+- Make interface usable in HSBS and FSBS VR views.
 - Anaglyph View
 - Better background fill that's still fast. Suggestions welcome.
