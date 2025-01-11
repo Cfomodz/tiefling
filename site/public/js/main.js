@@ -130,7 +130,7 @@ Alpine.data('app', () => ({
     },
 
 
-    // drag & drop image to load it and generate a depth map
+    // drag & drop image on window to load it and generate a depth map
     async handleDragDrop() {
 
         // accept dragged image on body
@@ -176,6 +176,10 @@ Alpine.data('app', () => ({
         this.inputImageFile = file;
 
         this.inputDataURL = URL.createObjectURL(file);
+
+        // clear depthmap
+        this.depthmapImage = this.depthmapImageFile = this.depthmapImageURL = this.depthmapURL = this.depthmapDataURL = null;
+
     },
 
     // Handle file drop on input field
@@ -195,6 +199,9 @@ Alpine.data('app', () => ({
 
             this.inputImageFile = file;
             this.inputDataURL = URL.createObjectURL(file);
+
+            // clear depthmap
+            this.depthmapImage = this.depthmapImageFile = this.depthmapImageURL = this.depthmapURL = this.depthmapDataURL = null;
 
         } catch (error) {
             console.error("Error while handling dropped file:", error);
