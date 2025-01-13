@@ -143,9 +143,14 @@ Alpine.data('app', () => ({
         try {
             this.state = "loading";
             this.tieflingDragActive = false;
+
+            this.inputDataURL = URL.createObjectURL(file);
+            this.inputImageURL = '';
+            this.depthmapImageURL = '';
+            this.depthmapDataURL = '';
             this.depthmapURL = await tiefling.getDepthmapURL(file);
             this.depthmapDataURL = this.depthmapURL;
-            this.inputDataURL = URL.createObjectURL(file);
+
             await tiefling.load3DImage(URL.createObjectURL(file), this.depthmapURL);
             this.state = "idle";
 
