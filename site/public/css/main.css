@@ -53,6 +53,13 @@ body {
     height: 100vh;
     align-items: center;
     justify-content: center;
+    transition: all 250ms;
+
+    &.dragging {
+        opacity: 0.5;
+        filter: blur(10px);
+        transition: all 500ms;
+    }
 }
 
 .controls {
@@ -404,6 +411,26 @@ body {
     border: none;
     cursor: pointer;
     font-size: 14px;
+
+    &[disabled] {
+        background: var(--color-text-subtle);
+        cursor: not-allowed;
+    }
+
+    &.states .state-loading .svg-wrap {
+        display: inline-block;
+        transform: translateY(0);
+
+        & svg {
+            display: inline-block;
+            color: var(--color-light);
+            width: 16px;
+            height: 16px;
+            vertical-align: bottom;
+            animation: rotate 3s linear infinite;
+        }
+    }
+
 }
 
 .simplebar-vertical .simplebar-scrollbar:before {

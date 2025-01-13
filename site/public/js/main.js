@@ -18,6 +18,9 @@ Alpine.data('app', () => ({
     displayMode: 'full',
     possibleDisplayModes: tiefling.getPossibleDisplayModes(), // full, hsbs, fsbs, anaglyph (red cyan)
 
+
+    tieflingDragActive: false, // dragging image onto canvas?
+
     inputImageURL: '',
     inputImageFile: null,
     inputImageDragActive: false,
@@ -48,8 +51,6 @@ Alpine.data('app', () => ({
         this.updateDepthmapSize();
         this.updateFocus();
         this.updateDevicePixelRatio();
-
-        this.handleDragDrop();
 
         // click anywhere outside .menu or.toggle-menu: set menuVisible to false
         document.addEventListener('click', (event) => {
@@ -125,45 +126,33 @@ Alpine.data('app', () => ({
         }
 
 
-
-
     },
 
 
-    // drag & drop image on window to load it and generate a depth map
-    async handleDragDrop() {
 
-        // accept dragged image on body
-        document.querySelector(".tiefling").addEventListener('dragover', (event) => {
-            event.preventDefault();
+    // Handle file drop on whole canvas
+    async tieflingImageFileDrop(event) {
 
-            // check size and type of the file. over 20MB: too big. only jpg and png
-            if (event.dataTransfer.items.length === 1 && event.dataTransfer.items[0].kind === 'file' && event.dataTransfer.items[0].type.match('^image/')) {
-                event.dataTransfer.dropEffect = 'copy';
-            } else {
-                event.dataTransfer.dropEffect = 'none';
-            }
+        const file = event.dataTransfer.files[0];
+        if (!file || !file.type.match('^image/')) {
+            console.error("Dropped file is not an image");
+            this.tieflingDragActive = false;
+            return;
+        }
 
-        });
+        try {
+            this.state = "loading";
+            this.tieflingDragActive = false;
+            this.depthmapURL = await tiefling.getDepthmapURL(file);
+            this.depthmapDataURL = this.depthmapURL;
+            this.inputDataURL = URL.createObjectURL(file);
+            await tiefling.load3DImage(URL.createObjectURL(file), this.depthmapURL);
+            this.state = "idle";
 
-        document.querySelector(".tiefling").addEventListener('drop', async (event) => {
-            event.preventDefault();
-            const file = event.dataTransfer.files[0];
-            this.menuVisible = false
-            try {
-                this.state = "loading";
-                this.depthmapURL = await tiefling.getDepthmapURL(file);
-                this.depthmapDataURL = this.depthmapURL;
-                this.inputDataURL = URL.createObjectURL(file);
-                await tiefling.load3DImage(URL.createObjectURL(file), this.depthmapURL);
-                this.state = "idle";
-            } catch (error) {
-                console.error("loading image error: ", error);
-                this.state = "error";
-            }
-
-        });
-
+        } catch (error) {
+            console.error("Error while handling dropped file:", error);
+            this.state = "error";
+        }
     },
 
 
