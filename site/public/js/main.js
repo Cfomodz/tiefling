@@ -41,6 +41,14 @@ Alpine.data('app', () => ({
 
     fullscreen: false, // fullscreen selected?
 
+    exampleImages: ['forest', 'portrait', 'robot', 'hoernchen', 'wombat-on-a-lawnmower', 'hotdog', 'bernd', 'cafetattoos', 'beachpeace', 'boardbear', 'crystalmountain', 'desertrace', 'spikypizza', 'bestpizza', 'mrfrog'].map(image => ({
+        'key': image,
+        'image': 'img/examples/' + image + '.webp',
+        'thumb': 'img/examples/' + image + '-thumb.webp',
+        'depthmap': 'img/examples/' + image + '-depthmap.png'
+    })),
+
+
     async init() {
 
         this.loadSettings();
@@ -119,8 +127,12 @@ Alpine.data('app', () => ({
             }
 
         } else {
-            this.depthmapImageURL = this.depthmapURL = this.depthmapDataURL = 'img/examples/forest-depthmap.png';
-            this.inputImageURL = 'img/examples/forest.webp';
+
+            // select a random example image
+            const exampleImage = this.exampleImages[Math.floor(Math.random() * this.exampleImages.length)];
+
+            this.depthmapImageURL = this.depthmapURL = this.depthmapDataURL = exampleImage.depthmap;
+            this.inputImageURL = exampleImage.image;
             this.inputDataURL = this.inputImageURL;
             tiefling.load3DImage(this.inputImageURL, this.depthmapImageURL);
         }
@@ -246,59 +258,63 @@ Alpine.data('app', () => ({
     },
 
     async loadImage() {
-
         this.state = "loading";
+        try {
+            this.inputImage = this.depthmapImage = null;
 
-        this.inputImage = this.depthmapImage = null;
+            let inputURL = '';
+            this.depthmapURL = '';
 
-        let inputURL = '';
-        this.depthmapURL = '';
-
-        // get input image from url or uploaded aor dragged file
-        if (this.inputImageFile) {
-            this.inputImage = this.inputImageFile;
-        } else if (this.inputImageURL) {
-            inputURL = this.inputImageURL;
-            this.inputImage = await fetch(this.inputImageURL).then(response => response.blob());
-        }
-
-        // get depthmap image from url, uploaded or dragged file
-        if (this.depthmapImageFile) {
-            this.depthmapImage = this.depthmapImageFile;
-            this.depthmapURL = URL.createObjectURL(this.depthmapImage);
-
-        } else if (this.depthmapImageURL) {
-            this.depthmapURL = this.depthmapImageURL;
-            this.depthmapImage = await fetch(this.depthmapImageURL).then(response => response.blob());
-        }
-
-        if (this.depthmapImage) {
-            tiefling.load3DImage(URL.createObjectURL(this.inputImage), URL.createObjectURL(this.depthmapImage));
-
-        } else {
-            this.depthmapURL = await tiefling.getDepthmapURL(this.inputImage);
-
-            this.depthmapImage = await fetch(this.depthmapURL).then(response => response.blob());
-            tiefling.load3DImage(URL.createObjectURL(this.inputImage), this.depthmapURL);
-
-        }
-
-        this.depthmapDataURL = URL.createObjectURL(this.depthmapImage);
-        this.inputDataURL = URL.createObjectURL(this.inputImage);
-
-        // add ?input (and optional &depthmap) parameter to history, if the urls start with https
-        if (inputURL.match(/^https?:\/\//)) {
-
-            let newPath = window.location.origin + window.location.pathname + '?input=' + encodeURIComponent(inputURL);
-
-            if (this.depthmapURL.match(/^https?:\/\//)) {
-                newPath += '&depthmap=' + encodeURIComponent(this.depthmapURL);
+            // get input image from url or uploaded aor dragged file
+            if (this.inputImageFile) {
+                this.inputImage = this.inputImageFile;
+            } else if (this.inputImageURL) {
+                inputURL = this.inputImageURL;
+                this.inputImage = await fetch(this.inputImageURL).then(response => response.blob());
             }
 
-            history.pushState({}, '', newPath);
+            // get depthmap image from url, uploaded or dragged file
+            if (this.depthmapImageFile) {
+                this.depthmapImage = this.depthmapImageFile;
+                this.depthmapURL = URL.createObjectURL(this.depthmapImage);
+
+            } else if (this.depthmapImageURL) {
+                this.depthmapURL = this.depthmapImageURL;
+                this.depthmapImage = await fetch(this.depthmapImageURL).then(response => response.blob());
+            }
+
+            if (this.depthmapImage) {
+                tiefling.load3DImage(URL.createObjectURL(this.inputImage), URL.createObjectURL(this.depthmapImage));
+
+            } else {
+                this.depthmapURL = await tiefling.getDepthmapURL(this.inputImage);
+
+                this.depthmapImage = await fetch(this.depthmapURL).then(response => response.blob());
+                tiefling.load3DImage(URL.createObjectURL(this.inputImage), this.depthmapURL);
+
+            }
+
+            this.depthmapDataURL = URL.createObjectURL(this.depthmapImage);
+            this.inputDataURL = URL.createObjectURL(this.inputImage);
+
+            // add ?input (and optional &depthmap) parameter to history, if the urls start with https
+            if (inputURL.match(/^https?:\/\//)) {
+
+                let newPath = window.location.origin + window.location.pathname + '?input=' + encodeURIComponent(inputURL);
+
+                if (this.depthmapURL.match(/^https?:\/\//)) {
+                    newPath += '&depthmap=' + encodeURIComponent(this.depthmapURL);
+                }
+
+                history.pushState({}, '', newPath);
+            }
+
+            this.state = "idle";
+        } catch (error) {
+            console.error("Error while loading image:", error);
+            this.state = "error";
         }
 
-        this.state = "idle";
 
     },
 

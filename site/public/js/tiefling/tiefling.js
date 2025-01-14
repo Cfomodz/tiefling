@@ -465,7 +465,7 @@ export const generateDepthmap = function(imageFile, options = {}) {
  * @param image - path to image
  * @param depthMap - path to depthmap
  * @param options
- * @returns {{destroy: *, onMouseMove: *}}
+ * @returns {{destroy: *, onMouseMove: *, setFocus: *, setDevicePixelRatio: *, setMouseXOffset: * }}
  * @constructor
  */
 export const TieflingView = function (container, image, depthMap, options) {
@@ -504,6 +504,7 @@ export const TieflingView = function (container, image, depthMap, options) {
                     }
                 `,
         fragmentShader: `
+                // TODO: handle edges better somehow. less shimmering, more performance
                 precision mediump float;
             
                 uniform sampler2D colorTexture;
@@ -660,7 +661,7 @@ export const TieflingView = function (container, image, depthMap, options) {
     }
 
     function onMouseMove(event) {
-        // Normalize coordinates to -1 to 1 range. -1 = container left, 1 = container right. clamp to -1 to 1
+        // Normalize coordinates to -1 to 1 range. -1 = container left, 1 = container right.
         const rect = container.getBoundingClientRect();
         mouseX = Math.min(1, Math.max(-1, (event.clientX - rect.left) / containerWidth * 2 - 1));
         mouseY = Math.min(1, Math.max(-1, (event.clientY - rect.top) / containerHeight * 2 - 1));

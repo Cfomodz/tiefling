@@ -136,7 +136,7 @@
                 </div>
                 <div class="menu-row">
                     <button class="button-main states" @click="loadImage()" :disabled="state == 'loading'">
-                        <span class="state state-idle" x-show="state == 'idle'">Load Image</span>
+                        <span class="state state-idle" x-show="state == 'idle' || state == 'error'">Load Image</span>
                         <span class="state state-loading" x-show="state == 'loading'">
                             <span>Loading</span>
                             <span class="svg-wrap">
@@ -232,6 +232,16 @@
                     <div class="input-checkbox">
                         <input type="checkbox" id="fullscreen" @change="toggleFullscreen()" x-model="fullscreen">
                         <label for="fullscreen">Fullscreen</label>
+                    </div>
+                </div>
+            </div>
+            <div class="menu-group">
+                <div class="menu-row">
+                    <label>Examples</label>
+                    <div class="example-images">
+                        <template x-for="example in exampleImages">
+                            <a :href="'/?input=' + example.image + '&depthmap=' + example.depthmap" class="example-image" :style="'background-image: url(' + example.thumb + ')'" :title="example.key"></a>
+                        </template>
                     </div>
                 </div>
             </div>

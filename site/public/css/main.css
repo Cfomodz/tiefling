@@ -1,8 +1,9 @@
 :root {
     --color-light: #fff;
+    --color-dark: #000;
     --color-text: #ccc;
     --color-text-subtle: #888;
-    --color-background: #000;
+    --color-background: var(--color-dark);
     --color-background-transparent: rgba(20,20,20,0.8);
     --color-main: #0085ff;
     --color-border: #222;
@@ -429,6 +430,26 @@ body {
             vertical-align: bottom;
             animation: rotate 3s linear infinite;
         }
+    }
+
+}
+
+.example-images {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    grid-gap: 5px;
+
+    .example-image {
+        display: grid;
+        position: relative;
+        height: 59px;
+        border-radius: var(--border-radius);
+        background-color: var(--color-dark);
+        background-size: contain;
+        background-position: 50% 50%;
+        background-repeat: no-repeat;
+        border: 1px solid var(--color-border);
+
     }
 
 }
