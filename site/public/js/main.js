@@ -109,6 +109,8 @@ Alpine.data('app', () => ({
         if (this.inputImageURL) {
 
             if (this.depthmapURL) {
+                this.inputDataURL = this.inputImageURL;
+                this.depthmapDataURL = this.depthmapImageURL = this.depthmapURL;
                 tiefling.load3DImage(this.inputImageURL, this.depthmapURL);
             } else {
                 this.state = "loading";
