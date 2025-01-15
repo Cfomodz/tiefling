@@ -11,8 +11,7 @@
 
         // are we on https://www.imdb.com/title/{something}/mediaviewer?
         if (urlPath.startsWith('/title/') && urlPath.includes('/mediaviewer')) {
-            imageURL = document.querySelector('[data-testid="media-viewer"] img').src;
-            return imageURL;
+            return document.querySelector('div[data-testid="media-viewer"] div[style*="calc(50% + 0px)"] img').src;
         }
 
         // Default: return first big image
