@@ -1,7 +1,7 @@
 // Source for bookmarklet. Create actual bookmarklet with createBookmarklet in main.js or some online bookmarklet creator.
 // Detect images from various websites, send them to https://tiefling.gerlach.dev?input={imageURL}
 // Only works for sites that don't have a restrictive CORS policy
-// ---URL_PREFIX--- is replaced with the actual URL
+// ---URL_PREFIX--- is replaced with the actual URL in createBookmarlet in main.js
 (function() {
 
     const urlPath = window.location.pathname;
