@@ -157,6 +157,13 @@ body {
             color: var(--color-main);
             float: right;
         }
+
+        .info {
+            display: block;
+            font-size: 10px;
+            color: var(--color-text-subtle);
+            margin-left: 0;
+        }
     }
 
     .info {
@@ -435,6 +442,14 @@ body {
         }
     }
 
+}
+
+.bookmarklet {
+    display: inline-block;
+    background: var(--color-text-subtle);
+    color: var(--color-light);
+    border-radius: var(--border-radius);
+    padding: 5px 10px;
 }
 
 .example-images {

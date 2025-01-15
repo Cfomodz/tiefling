@@ -11,6 +11,7 @@ URLSearchParams.prototype.getRaw = function(param) {
     return match ? match[1] : null;
 };
 
+
 Alpine.data('app', () => ({
 
     state: 'idle',
@@ -41,6 +42,8 @@ Alpine.data('app', () => ({
 
     fullscreen: false, // fullscreen selected?
 
+    bookmarkletCode: '',
+
     exampleImages: ['forest', 'portrait', 'robot', 'hoernchen', 'wombat-on-a-lawnmower', 'hotdog', 'bernd', 'cafetattoos', 'beachpeace', 'boardbear', 'crystalmountain', 'desertrace', 'spikypizza', 'bestpizza', 'mrfrog', 'seagulls', 'snack', 'rat'].map(image => ({
         'key': image,
         'image': 'img/examples/' + image + '.webp',
@@ -53,12 +56,14 @@ Alpine.data('app', () => ({
 
         this.loadSettings();
         this.handleURLParams();
+        this.generateBookmarkletLink();
 
         await this.initialLoadImage();
 
         this.updateDepthmapSize();
         this.updateFocus();
         this.updateDevicePixelRatio();
+
 
         // click anywhere outside .menu or.toggle-menu: set menuVisible to false
         document.addEventListener('click', (event) => {
@@ -78,6 +83,29 @@ Alpine.data('app', () => ({
         this.mouseXOffset = parseFloat(localStorage.getItem('mouseXOffset')) || this.mouseXOffset;
     },
 
+
+    async generateBookmarkletLink() {
+        try {
+            const response = await fetch('/js/bookmarklet.js');
+            this.bookmarkletCode = this.createBookmarklet(await response.text());
+        } catch (error) {
+            console.error('Error generating bookmarklet:', error);
+        }
+    },
+
+    // create bookmarklet for current domain
+    createBookmarklet(sourceCode) {
+        // replace ---URL_PREFIX--- with current protocol, domain, port and path
+        const urlPrefix = window.location.origin;
+
+        let code = sourceCode
+            .replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '') // Remove comments
+            .replace(/\s+/g, ' ')                    // Collapse whitespace
+            .replace('---URL_PREFIX---', urlPrefix)
+            .trim();
+
+        return 'javascript:' + encodeURIComponent(code);
+    },
 
 
     // handle optional URL parameters
@@ -116,8 +144,9 @@ Alpine.data('app', () => ({
                 this.state = "loading";
 
                 // load image file from url
+                let imageBlob;
                 try {
-                    const imageBlob = await fetch(this.inputImageURL).then(response => response.blob());
+                    imageBlob = await fetch(this.inputImageURL).then(response => response.blob());
                 } catch (error) {
                     console.error("Error while loading image from URL:", error);
                     this.state = "error";
