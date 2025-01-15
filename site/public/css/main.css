@@ -80,6 +80,7 @@ body {
             margin-right: 10px;
             vertical-align: top;
             padding-top: 18px;
+            text-shadow: rgba(0,0,0,0.3) 0 1px 0;
         }
 
         .toggle-menu {
@@ -92,6 +93,8 @@ body {
                 display: inline-block;
                 width: 20px;
                 height: 20px;
+
+                filter: drop-shadow(0 1px 0px rgba(0,0,0,0.3));
             }
 
             &:hover {

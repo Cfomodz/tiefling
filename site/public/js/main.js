@@ -41,7 +41,7 @@ Alpine.data('app', () => ({
 
     fullscreen: false, // fullscreen selected?
 
-    exampleImages: ['forest', 'portrait', 'robot', 'hoernchen', 'wombat-on-a-lawnmower', 'hotdog', 'bernd', 'cafetattoos', 'beachpeace', 'boardbear', 'crystalmountain', 'desertrace', 'spikypizza', 'bestpizza', 'mrfrog'].map(image => ({
+    exampleImages: ['forest', 'portrait', 'robot', 'hoernchen', 'wombat-on-a-lawnmower', 'hotdog', 'bernd', 'cafetattoos', 'beachpeace', 'boardbear', 'crystalmountain', 'desertrace', 'spikypizza', 'bestpizza', 'mrfrog', 'seagulls', 'snack', 'rat'].map(image => ({
         'key': image,
         'image': 'img/examples/' + image + '.webp',
         'thumb': 'img/examples/' + image + '-thumb.webp',
