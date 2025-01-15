@@ -256,7 +256,7 @@ Alpine.data('app', () => ({
     async handleDepthmapImageFile(event) {
         const file = event.target.files[0];
         if (!file) return;
-        this.depthmapImageURL = "Uploaded file";
+        this.depthmapImageURL = "";
         this.depthmapImageFile = file;
 
         this.depthmapDataURL = URL.createObjectURL(file);
@@ -276,7 +276,7 @@ Alpine.data('app', () => ({
         try {
             // Reset drag state and update status
             this.depthmapImageDragActive = false;
-            this.depthmapImageURL = "Uploaded file";
+            this.depthmapImageURL = "";
             this.depthmapImageFile = file;
             this.depthmapDataURL = URL.createObjectURL(file);
 
