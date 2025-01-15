@@ -116,7 +116,13 @@ Alpine.data('app', () => ({
                 this.state = "loading";
 
                 // load image file from url
-                const imageBlob = await fetch(this.inputImageURL).then(response => response.blob());
+                try {
+                    const imageBlob = await fetch(this.inputImageURL).then(response => response.blob());
+                } catch (error) {
+                    console.error("Error while loading image from URL:", error);
+                    this.state = "error";
+                    return;
+                }
 
                 // generate depth map
                 this.depthmapURL = await tiefling.getDepthmapURL(imageBlob, this.depthmapSize);
