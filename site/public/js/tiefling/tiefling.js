@@ -472,7 +472,9 @@ export const TieflingView = function (container, image, depthMap, options) {
 
     let mouseXOffset = options.mouseXOffset || 0;
     let focus = options.focus || 0.3; // 1: strafe camera, good for sbs view. 0.3: rotate around some middle point
-    let mouseSensitivity = options.mouseSensitivity || 10;
+    let baseMouseSensitivity = options.mouseSensitivity || 10;
+    let mouseSensitivityX = baseMouseSensitivity;
+    let mouseSensitivityY = baseMouseSensitivity;
     let devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
 
     let scene, camera, renderer, quad;
@@ -658,19 +660,19 @@ export const TieflingView = function (container, image, depthMap, options) {
             material.uniforms.depthTexture.value = texture;
         });
 
+        updateMouseSensitivity();
+
     }
 
     function onMouseMove(event) {
-        // Normalize coordinates to -1 to 1 range. -1 = container left, 1 = container right.
         const rect = container.getBoundingClientRect();
         mouseX = Math.min(1, Math.max(-1, (event.clientX - rect.left) / containerWidth * 2 - 1));
         mouseY = Math.min(1, Math.max(-1, (event.clientY - rect.top) / containerHeight * 2 - 1));
 
-        mouseX += 2 * mouseXOffset; // Adjust offset to normalized range
+        mouseX += 2 * mouseXOffset;
 
-        // Adjust sensitivity if needed
-        targetX = mouseX * mouseSensitivity;
-        targetY = mouseY * mouseSensitivity;
+        targetX = mouseX * mouseSensitivityX;
+        targetY = mouseY * mouseSensitivityY;
     }
 
     function animate() {
@@ -686,11 +688,25 @@ export const TieflingView = function (container, image, depthMap, options) {
         renderer.render(scene, camera);
     }
 
+    function updateMouseSensitivity() {
+        const aspect = containerWidth / containerHeight;
+        if (aspect > 1) {
+            // Wide container - increase X sensitivity
+            mouseSensitivityX = baseMouseSensitivity * aspect;
+            mouseSensitivityY = baseMouseSensitivity * 1.5;
+        } else {
+            // Tall container - increase Y sensitivity
+            mouseSensitivityX = baseMouseSensitivity;
+            mouseSensitivityY = (baseMouseSensitivity / aspect) * 1.5;
+        }
+    }
+
     const onResize = () => {
         containerWidth = container.offsetWidth;
         containerHeight = container.offsetHeight;
         renderer.setSize(containerWidth, containerHeight);
         material.uniforms.resolution.value.set(containerWidth, containerHeight);
+        updateMouseSensitivity();
     };
 
     window.addEventListener('resize', onResize);
