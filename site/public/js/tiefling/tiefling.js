@@ -84,7 +84,7 @@ export const Tiefling = function(container, options = {}) {
             let centerX = rect.left + rect.width / 2;
             let centerY = rect.top + rect.height / 2;
 
-            const radiusX = rect.width / 4;
+            const radiusX = rect.width / 6;
             const radiusY = rect.height / 6;
             const speed = 0.001;
             const time = Date.now() * speed;
