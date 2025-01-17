@@ -44,11 +44,11 @@ Alpine.data('app', () => ({
 
     bookmarkletCode: '',
 
-    exampleImages: ['forest', 'portrait', 'robot', 'hoernchen', 'wombat-on-a-lawnmower', 'hotdog', 'bernd', 'cafetattoos', 'beachpeace', 'boardbear', 'crystalmountain', 'desertrace', 'spikypizza', 'bestpizza', 'mrfrog', 'seagulls', 'snack', 'rat'].map(image => ({
+    exampleImages: ['jungle', 'portrait', 'robot', 'hoernchen', 'wombat-on-a-lawnmower', 'hotdog', 'bernd', 'cafetattoos', 'beachpeace', 'boardbear', 'crystalmountain', 'desertrace', 'spikypizza', 'bestpizza', 'mrfrog', 'seagulls', 'snack', 'rat'].map(image => ({
         'key': image,
-        'image': 'img/examples/' + image + '.webp',
-        'thumb': 'img/examples/' + image + '-thumb.webp',
-        'depthmap': 'img/examples/' + image + '-depthmap.png'
+        'image': 'img/examples/' + image + '.jpg',
+        'thumb': 'img/examples/' + image + '_thumb.jpg',
+        'depthmap': 'img/examples/' + image + '_depthmap.png'
     })),
 
 
