@@ -84,8 +84,17 @@ export const Tiefling = function(container, options = {}) {
             let centerX = rect.left + rect.width / 2;
             let centerY = rect.top + rect.height / 2;
 
-            const radiusX = rect.width / 6;
-            const radiusY = rect.height / 6;
+            let radiusX = rect.width / 6;
+            let radiusY = rect.height / 6;
+
+            // acount for aspect ratio of container
+            if (rect.width > rect.height) {
+                radiusY = radiusX * (rect.height / rect.width);
+            } else {
+                radiusX = radiusY * (rect.width / rect.height);
+            }
+
+
             const speed = 0.001;
             const time = Date.now() * speed;
 

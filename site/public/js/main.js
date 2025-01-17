@@ -19,7 +19,6 @@ Alpine.data('app', () => ({
     displayMode: 'full',
     possibleDisplayModes: tiefling.getPossibleDisplayModes(), // full, hsbs, fsbs, anaglyph (red cyan)
 
-
     tieflingDragActive: false, // dragging image onto canvas?
 
     inputImageURL: '',
