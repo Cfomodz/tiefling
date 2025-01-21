@@ -507,32 +507,41 @@ export const TieflingView = function (container, image, depthMap, options) {
     animate();
 
     function createGeometry(width, height, depthData) {
-        const geometry = new THREE.PlaneGeometry(
-            2, // width
-            2, // height
-            width - 1, // widthSegments
-            height - 1 // heightSegments
-        );
+        const imageAspect = depthData.width / depthData.height;
+        const containerAspect = containerWidth / containerHeight;
 
-        // Calculate aspect ratio
-        const aspect = containerWidth / containerHeight;
+        let planeWidth = 2;
+        let planeHeight = 2;
+
+        // Adjust plane dimensions to match image aspect ratio
+        if (imageAspect > containerAspect) {
+            planeHeight = planeWidth / imageAspect;
+        } else {
+            planeWidth = planeHeight * imageAspect;
+        }
+
+        const geometry = new THREE.PlaneGeometry(
+            planeWidth,
+            planeHeight,
+            width - 1,
+            height - 1
+        );
 
         // Modify vertices based on depth map
         const vertices = geometry.attributes.position.array;
         const uvs = geometry.attributes.uv.array;
+        const depthScale = 0.5; // Adjustable depth scale
 
         for (let i = 0; i < vertices.length; i += 3) {
             const uvIndex = (i / 3) * 2;
             const u = uvs[uvIndex];
             const v = uvs[uvIndex + 1];
 
-            // Sample depth map
             const x = Math.floor(u * depthData.width);
             const y = Math.floor((1 - v) * depthData.height);
             const depthValue = depthData.data[(y * depthData.width + x) * 4] / 255;
 
-            // Extrude vertices based on depth
-            vertices[i + 2] = (1 - depthValue) * -0.5; // Z-axis extrusion
+            vertices[i + 2] = (1 - depthValue) * -depthScale;
         }
 
         geometry.computeVertexNormals();
@@ -541,6 +550,7 @@ export const TieflingView = function (container, image, depthMap, options) {
 
     function init() {
         scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x000000);
 
         // Calculate proper FOV based on aspect ratio
         const aspect = containerWidth / containerHeight;
@@ -552,7 +562,8 @@ export const TieflingView = function (container, image, depthMap, options) {
         // Create a target point for the camera to look at
         const cameraTarget = new THREE.Vector3(0, 0, 0);
 
-        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+        renderer.outputEncoding = THREE.sRGBEncoding;
         renderer.setPixelRatio(devicePixelRatio);
         renderer.setSize(containerWidth, containerHeight);
         container.appendChild(renderer.domElement);
@@ -561,6 +572,9 @@ export const TieflingView = function (container, image, depthMap, options) {
         const textureLoader = new THREE.TextureLoader();
         const imagePromise = new Promise(resolve => {
             textureLoader.load(image, texture => {
+                texture.encoding = THREE.sRGBEncoding;
+                texture.colorSpace = THREE.SRGBColorSpace;
+                texture.needsUpdate = true;
                 material.map = texture;
                 material.needsUpdate = true;
                 resolve();
@@ -587,12 +601,6 @@ export const TieflingView = function (container, image, depthMap, options) {
                 const geometry = createGeometry(gridWidth, gridHeight, depthData);
                 mesh = new THREE.Mesh(geometry, material);
 
-                if (mesh) {
-                    const scale = aspect >= 1 ? 1 : 1/aspect;
-                    mesh.scale.set(scale, 1, 1);
-                }
-
-
                 scene.add(mesh);
                 resolve();
             };
@@ -618,29 +626,33 @@ export const TieflingView = function (container, image, depthMap, options) {
         animationFrameId = requestAnimationFrame(animate);
 
         if (mesh) {
-            // Calculate camera position based on mouse input
-            const radius = 2; // Distance from camera to focus point
-            const angleX = targetX * 0.2; // Horizontal rotation
-            const angleY = targetY * 0.2; // Vertical rotation
+            // Ease the target values
+            const currentX = (mouseX + 2 * mouseXOffset) * mouseSensitivityX;
+            const currentY = mouseY * mouseSensitivityY;
 
-            // Calculate focus point
-            const focusZ = -focus * 2; // Scale focus point based on focus parameter
-            const focusPoint = new THREE.Vector3(0, 0, focusZ);
+            targetX += (currentX - targetX) * easing;
+            targetY += (currentY - targetY) * easing;
+
+            // Fixed camera distance to maintain consistent framing
+            const baseRadius = 2;
+            const angleX = targetX * 0.2;
+            const angleY = targetY * 0.2;
+
+            // Calculate orbit center based on focus
+            // focus = 0: orbit around camera position
+            // focus = 1: orbit around infinity (parallel projection)
+            const orbitCenter = new THREE.Vector3(0, 0, -focus * baseRadius);
 
             // Calculate camera position
-            camera.position.x = Math.sin(angleX) * radius;
-            camera.position.y = Math.sin(angleY) * radius;
-            camera.position.z = Math.cos(angleX) * Math.cos(angleY) * radius;
+            camera.position.set(
+                Math.sin(angleX) * baseRadius,
+                Math.sin(angleY) * baseRadius,
+                Math.cos(angleX) * Math.cos(angleY) * baseRadius
+            );
 
-            // Adjust camera position based on focus
-            camera.position.add(focusPoint);
-
-            // Make camera look at focus point
-            camera.lookAt(focusPoint);
-
-            // Keep mesh centered at origin
-            mesh.position.set(0, 0, 0);
-            mesh.rotation.set(0, 0, 0);
+            // Offset camera position by orbit center
+            camera.position.add(orbitCenter);
+            camera.lookAt(orbitCenter);
         }
 
         renderer.render(scene, camera);
