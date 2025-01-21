@@ -480,13 +480,14 @@ export const generateDepthmap = function(imageFile, options = {}) {
 export const TieflingView = function (container, image, depthMap, options) {
 
     let mouseXOffset = options.mouseXOffset || 0;
-    let focus = options.focus || 0.3; // 1: strafe camera, good for sbs view. 0.3: rotate around some middle point
-    let baseMouseSensitivity = options.mouseSensitivity || 8;
+    let focus = options.focus || 0.3;
+    let baseMouseSensitivity = options.mouseSensitivity || 1;
     let mouseSensitivityX = baseMouseSensitivity;
     let mouseSensitivityY = baseMouseSensitivity;
     let devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
+    let meshResolution = options.meshResolution || 1024; // Resolution of the mesh grid
 
-    let scene, camera, renderer, quad;
+    let scene, camera, renderer, mesh;
     let mouseX = 0, mouseY = 0;
     let targetX = 0, targetY = 0;
 
@@ -496,181 +497,110 @@ export const TieflingView = function (container, image, depthMap, options) {
     let containerWidth = container.offsetWidth;
     let containerHeight = container.offsetHeight;
 
-    let material = new THREE.ShaderMaterial({
-        uniforms: {
-            colorTexture: { value: null },
-            depthTexture: { value: null },
-            offset: { value: new THREE.Vector2(0, 0) },
-            resolution: { value: new THREE.Vector2(containerWidth, containerHeight) },
-            textureResolution: { value: new THREE.Vector2(1, 1) },
-            focus: { value: focus },
-            scale: { value: 0.0125 },
-            enlarge: { value: 1.06 }
-        },
-        vertexShader: `
-                    varying vec2 vUv;
-                    void main() {
-                        vUv = uv;
-                        gl_Position = vec4(position, 1.0);
-                    }
-                `,
-        fragmentShader: `
-                // TODO: handle edges better somehow. less shimmering, more performance
-                precision mediump float;
-            
-                uniform sampler2D colorTexture;
-                uniform sampler2D depthTexture;
-                uniform vec2 offset;
-                uniform vec2 resolution;
-                uniform vec2 textureResolution;
-                uniform float focus;
-                uniform float scale;
-                uniform float enlarge;                
-                varying vec2 vUv;
-            
-                #define MAXSTEPS 128.0
-                #define COMPRESSION 0.8
-            
-                vec2 coverUV(vec2 uv, vec2 resolution, vec2 textureResolution) {
-                    // Calculate base ratios
-                    float containerRatio = resolution.x / resolution.y;
-                    float imageRatio = textureResolution.x / textureResolution.y;
-                    
-                    vec2 scale = vec2(1.0);
-                    vec2 offset = vec2(0.0);
-                    
-                    // Contain behavior
-                    if (containerRatio < imageRatio) {
-                        // Container is relatively taller than image
-                        scale.x = 1.0;
-                        scale.y = (containerRatio / imageRatio);
-                    } else {
-                        // Container is relatively wider than image
-                        scale.x = (imageRatio / containerRatio);
-                        scale.y = 1.0;
-                    }
-                    
-                    // Center the image
-                    offset = (1.0 - scale) * 0.5;
-                    
-                    // Apply scaling and offset to UV
-                    return (uv - 0.5) / scale + 0.5;
-                }
-
-                void main() {
-                    vec2 uv = coverUV(vUv, resolution, textureResolution);
-        
-                    // Discard pixels outside the valid range
-                    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-                        gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-                        return;
-                    }
-
-                    float aspect = resolution.x / resolution.y;
-                    vec2 scale2 = vec2(scale * min(1.0, 1.0/aspect), scale * min(1.0, aspect)) * vec2(1, -1);
-                    
-                    // calculate parallax vectors
-                    vec2 vectorStart = (0.5 - focus) * offset - offset/2.0;
-                    vec2 vectorEnd = (0.5 - focus) * offset + offset/2.0;
-                    
-                    float dstep = COMPRESSION / (MAXSTEPS - 1.0);
-                    vec2 vstep = (vectorEnd - vectorStart) / (MAXSTEPS - 1.0);
-
-                    vec4 bestColor = texture2D(colorTexture, uv);
-                    float bestConfidence = 0.0;
-                    float bestDepth = 0.0;
-
-                    // first pass: find the best depth match
-                    for(float i = 0.0; i < MAXSTEPS; i++) {
-                        float t = i / (MAXSTEPS - 1.0);
-                        vec2 currentVector = mix(vectorStart, vectorEnd, t);
-                        vec2 samplePos = uv + currentVector * scale2;
-                        
-                        if (samplePos.x < 0.0 || samplePos.x > 1.0 || 
-                            samplePos.y < 0.0 || samplePos.y > 1.0) continue;
-
-                        float depth = 1.0 - texture2D(depthTexture, samplePos).r;
-                        float targetDepth = mix(0.0, 1.0, t);
-                        
-                        // Sharp depth test
-                        float confidence = step(abs(depth - targetDepth), dstep);
-                        
-                        if (confidence > bestConfidence) {
-                            bestConfidence = confidence;
-                            bestColor = texture2D(colorTexture, samplePos);
-                            bestDepth = depth;
-                        }
-                    }
-
-                    // if no good match found, do a second pass with interpolation
-                    if (bestConfidence < 0.1) {
-                        vec4 colorSum = vec4(0.0);
-                        float weightSum = 0.0;
-
-                        for(float i = 0.0; i < MAXSTEPS; i++) {
-                            float t = i / (MAXSTEPS - 1.0);
-                            vec2 currentVector = mix(vectorStart, vectorEnd, t);
-                            vec2 samplePos = uv + currentVector * scale2;
-                            
-                            if (samplePos.x < 0.0 || samplePos.x > 1.0 || 
-                                samplePos.y < 0.0 || samplePos.y > 1.0) continue;
-
-                            float depth = 1.0 - texture2D(depthTexture, samplePos).r;
-                            float targetDepth = mix(0.0, 1.0, t);
-                            float weight = 1.0 - abs(depth - targetDepth);
-                            weight = pow(weight, 8.0); // Very sharp falloff
-
-                            colorSum += texture2D(colorTexture, samplePos) * weight;
-                            weightSum += weight;
-                        }
-
-                        if (weightSum > 0.0) {
-                            gl_FragColor = mix(bestColor, colorSum / weightSum, 0.5);
-                        } else {
-                            gl_FragColor = bestColor;
-                        }
-                    } else {
-                        gl_FragColor = bestColor;
-                    }
-                }
-            `
+    let material = new THREE.MeshBasicMaterial({
+        map: null,
+        side: THREE.DoubleSide
     });
 
 
     init();
     animate();
 
+    function createGeometry(width, height, depthData) {
+        const geometry = new THREE.PlaneGeometry(
+            2, // width
+            2, // height
+            width - 1, // widthSegments
+            height - 1 // heightSegments
+        );
+
+        // Calculate aspect ratio
+        const aspect = containerWidth / containerHeight;
+
+        // Modify vertices based on depth map
+        const vertices = geometry.attributes.position.array;
+        const uvs = geometry.attributes.uv.array;
+
+        for (let i = 0; i < vertices.length; i += 3) {
+            const uvIndex = (i / 3) * 2;
+            const u = uvs[uvIndex];
+            const v = uvs[uvIndex + 1];
+
+            // Sample depth map
+            const x = Math.floor(u * depthData.width);
+            const y = Math.floor((1 - v) * depthData.height);
+            const depthValue = depthData.data[(y * depthData.width + x) * 4] / 255;
+
+            // Extrude vertices based on depth
+            vertices[i + 2] = (1 - depthValue) * -0.5; // Z-axis extrusion
+        }
+
+        geometry.computeVertexNormals();
+        return geometry;
+    }
+
     function init() {
         scene = new THREE.Scene();
-        camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+        // Calculate proper FOV based on aspect ratio
+        const aspect = containerWidth / containerHeight;
+        const fov = aspect >= 1 ? 45 : (2 * Math.atan(Math.tan(45 * Math.PI / 360) / aspect) * 180 / Math.PI);
+
+        camera = new THREE.PerspectiveCamera(fov, aspect, 0.1, 1000);
+        camera.position.z = 2;
+
+        // Create a target point for the camera to look at
+        const cameraTarget = new THREE.Vector3(0, 0, 0);
 
         renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+        renderer.setPixelRatio(devicePixelRatio);
         renderer.setSize(containerWidth, containerHeight);
         container.appendChild(renderer.domElement);
 
-        // create a quad that fills the container
-        const geometry = new THREE.PlaneGeometry(2, 2);
-        quad = new THREE.Mesh(geometry, material);
-        scene.add(quad);
-
-        // load textures
+        // Load textures
         const textureLoader = new THREE.TextureLoader();
-
-        textureLoader.load(image, (texture) => {
-            material.uniforms.colorTexture.value = texture;
-            material.uniforms.textureResolution.value = new THREE.Vector2(
-                texture.image.width,
-                texture.image.height
-            );
+        const imagePromise = new Promise(resolve => {
+            textureLoader.load(image, texture => {
+                material.map = texture;
+                material.needsUpdate = true;
+                resolve();
+            });
         });
 
-        textureLoader.load(depthMap, (texture) => {
-            material.uniforms.depthTexture.value = texture;
+        // Load depth map and create geometry
+        const depthPromise = new Promise(resolve => {
+            const img = new Image();
+            img.src = depthMap;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                const depthData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+                // Calculate grid resolution based on aspect ratio
+                const aspect = containerWidth / containerHeight;
+                let gridWidth = aspect >= 1 ? meshResolution : Math.floor(meshResolution * aspect);
+                let gridHeight = aspect >= 1 ? Math.floor(meshResolution / aspect) : meshResolution;
+
+                const geometry = createGeometry(gridWidth, gridHeight, depthData);
+                mesh = new THREE.Mesh(geometry, material);
+
+                if (mesh) {
+                    const scale = aspect >= 1 ? 1 : 1/aspect;
+                    mesh.scale.set(scale, 1, 1);
+                }
+
+
+                scene.add(mesh);
+                resolve();
+            };
         });
 
-        updateMouseSensitivity();
-
+        Promise.all([imagePromise, depthPromise]).then(() => {
+            updateMouseSensitivity();
+        });
     }
 
     function onMouseMove(event) {
@@ -687,12 +617,31 @@ export const TieflingView = function (container, image, depthMap, options) {
     function animate() {
         animationFrameId = requestAnimationFrame(animate);
 
-        // smooth interpolation of the offset
-        const currentX = material.uniforms.offset.value.x;
-        const currentY = material.uniforms.offset.value.y;
+        if (mesh) {
+            // Calculate camera position based on mouse input
+            const radius = 2; // Distance from camera to focus point
+            const angleX = targetX * 0.2; // Horizontal rotation
+            const angleY = targetY * 0.2; // Vertical rotation
 
-        material.uniforms.offset.value.x += (targetX - currentX) * easing;
-        material.uniforms.offset.value.y += (targetY - currentY) * easing;
+            // Calculate focus point
+            const focusZ = -focus * 2; // Scale focus point based on focus parameter
+            const focusPoint = new THREE.Vector3(0, 0, focusZ);
+
+            // Calculate camera position
+            camera.position.x = Math.sin(angleX) * radius;
+            camera.position.y = Math.sin(angleY) * radius;
+            camera.position.z = Math.cos(angleX) * Math.cos(angleY) * radius;
+
+            // Adjust camera position based on focus
+            camera.position.add(focusPoint);
+
+            // Make camera look at focus point
+            camera.lookAt(focusPoint);
+
+            // Keep mesh centered at origin
+            mesh.position.set(0, 0, 0);
+            mesh.rotation.set(0, 0, 0);
+        }
 
         renderer.render(scene, camera);
     }
@@ -724,24 +673,18 @@ export const TieflingView = function (container, image, depthMap, options) {
     // public methods
     return {
 
-        destroy: function () {
+        destroy: function() {
             window.removeEventListener('resize', onResize);
 
-            // delete textures
-            if (material.uniforms.colorTexture.value) {
-                material.uniforms.colorTexture.value.dispose();
-            }
-            if (material.uniforms.depthTexture.value) {
-                material.uniforms.depthTexture.value.dispose();
+            if (material.map) {
+                material.map.dispose();
             }
 
-            // delete materials and geometries
-            if (quad) {
-                quad.geometry.dispose();
+            if (mesh) {
+                mesh.geometry.dispose();
                 material.dispose();
             }
 
-            // get rid of renderer
             if (renderer) {
                 renderer.dispose();
                 container.removeChild(renderer.domElement);
@@ -754,28 +697,21 @@ export const TieflingView = function (container, image, depthMap, options) {
             scene = null;
             camera = null;
             renderer = null;
-            quad = null;
+            mesh = null;
             material = null;
         },
 
-        onMouseMove: function(event) {
-            onMouseMove(event);
-        },
+        onMouseMove: onMouseMove,
 
         setFocus: function(value) {
             focus = value;
-            if (material) {
-                material.uniforms.focus.value = focus;
-            }
         },
-
         setDevicePixelRatio: function(value) {
             devicePixelRatio = value;
             if (renderer) {
                 renderer.setPixelRatio(devicePixelRatio);
             }
         },
-
         setMouseXOffset: function(value) {
             mouseXOffset = value;
         }
