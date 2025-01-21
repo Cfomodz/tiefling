@@ -486,6 +486,7 @@ export const TieflingView = function (container, image, depthMap, options) {
     let mouseSensitivityY = baseMouseSensitivity;
     let devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
     let meshResolution = options.meshResolution || 1024; // Resolution of the mesh grid
+    let meshDepth = options.meshDepth || 3.5; // Depth of the mesh grid
 
     let scene, camera, renderer, mesh;
     let mouseX = 0, mouseY = 0;
@@ -530,7 +531,6 @@ export const TieflingView = function (container, image, depthMap, options) {
         // Modify vertices based on depth map
         const vertices = geometry.attributes.position.array;
         const uvs = geometry.attributes.uv.array;
-        const depthScale = 0.5; // Adjustable depth scale
 
         for (let i = 0; i < vertices.length; i += 3) {
             const uvIndex = (i / 3) * 2;
@@ -541,7 +541,7 @@ export const TieflingView = function (container, image, depthMap, options) {
             const y = Math.floor((1 - v) * depthData.height);
             const depthValue = depthData.data[(y * depthData.width + x) * 4] / 255;
 
-            vertices[i + 2] = (1 - depthValue) * -depthScale;
+            vertices[i + 2] = (1 - depthValue) * -meshDepth;
         }
 
         geometry.computeVertexNormals();
@@ -554,13 +554,10 @@ export const TieflingView = function (container, image, depthMap, options) {
 
         // Calculate proper FOV based on aspect ratio
         const aspect = containerWidth / containerHeight;
-        const fov = aspect >= 1 ? 45 : (2 * Math.atan(Math.tan(45 * Math.PI / 360) / aspect) * 180 / Math.PI);
 
-        camera = new THREE.PerspectiveCamera(fov, aspect, 0.1, 1000);
-        camera.position.z = 2;
+        camera = new THREE.PerspectiveCamera(25, containerWidth / containerHeight, 0.1, 1000);
+        camera.position.z = 5;
 
-        // Create a target point for the camera to look at
-        const cameraTarget = new THREE.Vector3(0, 0, 0);
 
         renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
         renderer.outputEncoding = THREE.sRGBEncoding;
@@ -633,26 +630,36 @@ export const TieflingView = function (container, image, depthMap, options) {
             targetX += (currentX - targetX) * easing;
             targetY += (currentY - targetY) * easing;
 
-            // Fixed camera distance to maintain consistent framing
-            const baseRadius = 2;
-            const angleX = targetX * 0.2;
-            const angleY = targetY * 0.2;
+            // Reset mesh position and rotation
+            mesh.position.set(0, 0, 0);
+            mesh.rotation.set(0, 0, 0);
 
-            // Calculate orbit center based on focus
-            // focus = 0: orbit around camera position
-            // focus = 1: orbit around infinity (parallel projection)
-            const orbitCenter = new THREE.Vector3(0, 0, -focus * baseRadius);
+            // Calculate the camera movement
+            const moveAmount = 1.5; // Adjust this to control movement amount
+            const rotateAmount = 3.1; // Adjust this to control rotation amount
 
-            // Calculate camera position
-            camera.position.set(
-                Math.sin(angleX) * baseRadius,
-                Math.sin(angleY) * baseRadius,
-                Math.cos(angleX) * Math.cos(angleY) * baseRadius
+            // Interpolate between translation (focus = 0) and rotation (focus = 1)
+            const translation = new THREE.Vector3(
+                -targetX * moveAmount * (1 - focus),
+                -targetY * moveAmount * (1 - focus),
+                5 // Fixed distance
             );
 
-            // Offset camera position by orbit center
-            camera.position.add(orbitCenter);
-            camera.lookAt(orbitCenter);
+            // Calculate rotation angles
+            const rotX = targetY * rotateAmount * focus;
+            const rotY = -targetX * rotateAmount * focus;
+
+            // Apply camera transformation
+            camera.position.copy(translation);
+            camera.rotation.set(rotX, rotY, 0, 'XYZ');
+
+            // Adjust look target based on focus
+            const lookAtPoint = new THREE.Vector3(
+                0,
+                0,
+                -focus * 2 // Adjust this multiplier to control the focus point depth
+            );
+            camera.lookAt(lookAtPoint);
         }
 
         renderer.render(scene, camera);
