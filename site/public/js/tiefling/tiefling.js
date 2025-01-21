@@ -511,10 +511,9 @@ export const TieflingView = function (container, image, depthMap, options) {
         const imageAspect = depthData.width / depthData.height;
         const containerAspect = containerWidth / containerHeight;
 
+        // Calculate dimensions to fill container
         let planeWidth = 2;
         let planeHeight = 2;
-
-        // Adjust plane dimensions to match image aspect ratio
         if (imageAspect > containerAspect) {
             planeHeight = planeWidth / imageAspect;
         } else {
@@ -528,10 +527,10 @@ export const TieflingView = function (container, image, depthMap, options) {
             height - 1
         );
 
-        // Modify vertices based on depth map
         const vertices = geometry.attributes.position.array;
         const uvs = geometry.attributes.uv.array;
 
+        // Reduce depth effect at edges to minimize stretching
         for (let i = 0; i < vertices.length; i += 3) {
             const uvIndex = (i / 3) * 2;
             const u = uvs[uvIndex];
@@ -553,10 +552,9 @@ export const TieflingView = function (container, image, depthMap, options) {
         scene.background = new THREE.Color(0x000000);
 
         // Calculate proper FOV based on aspect ratio
-        const aspect = containerWidth / containerHeight;
 
-        camera = new THREE.PerspectiveCamera(25, containerWidth / containerHeight, 0.1, 1000);
-        camera.position.z = 5;
+        camera = new THREE.PerspectiveCamera(45, containerWidth / containerHeight, 0.1, 1000);
+        camera.position.z = 4;
 
 
         renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
@@ -608,17 +606,6 @@ export const TieflingView = function (container, image, depthMap, options) {
         });
     }
 
-    function onMouseMove(event) {
-        const rect = container.getBoundingClientRect();
-        mouseX = Math.min(1, Math.max(-1, (event.clientX - rect.left) / containerWidth * 2 - 1));
-        mouseY = Math.min(1, Math.max(-1, (event.clientY - rect.top) / containerHeight * 2 - 1));
-
-        mouseX += 2 * mouseXOffset;
-
-        targetX = mouseX * mouseSensitivityX;
-        targetY = mouseY * mouseSensitivityY;
-    }
-
     function animate() {
         animationFrameId = requestAnimationFrame(animate);
 
@@ -630,39 +617,55 @@ export const TieflingView = function (container, image, depthMap, options) {
             targetX += (currentX - targetX) * easing;
             targetY += (currentY - targetY) * easing;
 
-            // Reset mesh position and rotation
-            mesh.position.set(0, 0, 0);
-            mesh.rotation.set(0, 0, 0);
+            // Base camera position
+            const baseZ = 4;
 
-            // Calculate the camera movement
-            const moveAmount = 1.5; // Adjust this to control movement amount
-            const rotateAmount = 3.1; // Adjust this to control rotation amount
+            // Calculate movement based on focus
+            const strafeAmount = 0.5;
+            const rotateAmount = 0.2;
 
-            // Interpolate between translation (focus = 0) and rotation (focus = 1)
-            const translation = new THREE.Vector3(
-                -targetX * moveAmount * (1 - focus),
-                -targetY * moveAmount * (1 - focus),
-                5 // Fixed distance
+            // Strafe component (focus = 1)
+            const strafeX = -targetX * strafeAmount * focus;
+            const strafeY = -targetY * strafeAmount * focus;
+
+            // Rotate component (focus = 0)
+            const rotateX = targetY * rotateAmount * (1 - focus);
+            const rotateY = -targetX * rotateAmount * (1 - focus);
+
+            // Calculate rotation center based on focus
+            const rotationCenterZ = -2 * (1 - focus); // Closer when focus is low
+
+            // Apply transformations
+            camera.position.set(
+                strafeX,
+                strafeY,
+                baseZ
             );
 
-            // Calculate rotation angles
-            const rotX = targetY * rotateAmount * focus;
-            const rotY = -targetX * rotateAmount * focus;
+            // Apply rotation around focus point
+            if (focus < 1) {
+                const rotationCenter = new THREE.Vector3(0, 0, rotationCenterZ);
+                camera.position.sub(rotationCenter);
+                camera.position.applyEuler(new THREE.Euler(rotateX, rotateY, 0, 'XYZ'));
+                camera.position.add(rotationCenter);
+            }
 
-            // Apply camera transformation
-            camera.position.copy(translation);
-            camera.rotation.set(rotX, rotY, 0, 'XYZ');
-
-            // Adjust look target based on focus
-            const lookAtPoint = new THREE.Vector3(
-                0,
-                0,
-                -focus * 2 // Adjust this multiplier to control the focus point depth
-            );
-            camera.lookAt(lookAtPoint);
+            // Always look at rotation center
+            camera.lookAt(new THREE.Vector3(0, 0, rotationCenterZ));
         }
 
         renderer.render(scene, camera);
+    }
+
+    function onMouseMove(event) {
+        const rect = container.getBoundingClientRect();
+        mouseX = Math.min(1, Math.max(-1, (event.clientX - rect.left) / containerWidth * 2 - 1));
+        mouseY = Math.min(1, Math.max(-1, (event.clientY - rect.top) / containerHeight * 2 - 1));
+
+        mouseX += 2 * mouseXOffset;
+
+        targetX = mouseX * mouseSensitivityX;
+        targetY = mouseY * mouseSensitivityY;
     }
 
     function updateMouseSensitivity() {
