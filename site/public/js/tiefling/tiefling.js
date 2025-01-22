@@ -14,9 +14,9 @@ export const Tiefling = function(container, options = {}) {
     this.idleMovementAfter = options.idleMovementAfter || 3000; // -1 to disable
 
     this.depthmapSize = options.depthmapSize || 518;
-    this.focus = options.focus || 0.3;
+    this.focus = options.focus || 0.25;
     this.devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
-    this.mouseXOffset = options.mouseXOffset || 0.3;
+    this.mouseXOffset = options.mouseXOffset || 0.2;
 
 
     let view1, view2;
@@ -481,7 +481,7 @@ export const TieflingView = function (container, image, depthMap, options) {
 
     let mouseXOffset = options.mouseXOffset || 0;
     let focus = options.focus || 0.3;
-    let baseMouseSensitivity = options.mouseSensitivity || 0.1;
+    let baseMouseSensitivity = options.mouseSensitivity || 0.2;
     let mouseSensitivityX = baseMouseSensitivity;
     let mouseSensitivityY = baseMouseSensitivity;
     let devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
@@ -605,12 +605,18 @@ export const TieflingView = function (container, image, depthMap, options) {
 
                             float actualDepth = depth * meshDepth;
                             float focusDepth = focus * meshDepth;
+                            float cameraZ = 4.0;
 
-                            // Strafe displacement (opposite direction)
-                            vec2 strafe = mouseDelta * sensitivity * focus * actualDepth * vec2(-1.0, 1.0);
+                            // Strafe displacement (inversely proportional to camera distance)
+                            vec2 strafe = mouseDelta * sensitivity * focus * 
+                                (1.0 / (cameraZ - actualDepth)) * 
+                                vec2(-1.0, 1.0);
 
                             // Rotational displacement (relative to focus depth)
-                            vec2 rotate = mouseDelta * sensitivity * (1.0 - focus) * (actualDepth - focusDepth) * vec2(-1.0, 1.0);
+                            vec2 rotate = mouseDelta * sensitivity * 
+                                (1.0 - focus) * 
+                                (actualDepth - focusDepth) * 
+                                vec2(-1.0, 1.0);
 
                             pos.xy += strafe + rotate;
 
