@@ -486,7 +486,7 @@ export const TieflingView = function (container, image, depthMap, options) {
     let mouseSensitivityY = baseMouseSensitivity;
     let devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
     let meshResolution = options.meshResolution || 1024; // Resolution of the mesh grid
-    let meshDepth = options.meshDepth || 3.5; // Depth of the mesh grid
+    let meshDepth = options.meshDepth || 4; // Depth of the mesh grid
 
     let scene, camera, renderer, mesh;
     let mouseX = 0, mouseY = 0;
@@ -530,6 +530,9 @@ export const TieflingView = function (container, image, depthMap, options) {
         const vertices = geometry.attributes.position.array;
         const uvs = geometry.attributes.uv.array;
 
+        // Store original depth values
+        const originalDepths = new Float32Array(vertices.length / 3);
+
         // Reduce depth effect at edges to minimize stretching
         for (let i = 0; i < vertices.length; i += 3) {
             const uvIndex = (i / 3) * 2;
@@ -540,9 +543,11 @@ export const TieflingView = function (container, image, depthMap, options) {
             const y = Math.floor((1 - v) * depthData.height);
             const depthValue = depthData.data[(y * depthData.width + x) * 4] / 255;
 
-            vertices[i + 2] = (1 - depthValue) * -meshDepth;
+            originalDepths[i / 3] = depthValue;
+            vertices[i + 2] = 0; // Start with no extrusion
         }
 
+        geometry.setAttribute('originalDepth', new THREE.BufferAttribute(originalDepths, 1));
         geometry.computeVertexNormals();
         return geometry;
     }
@@ -553,7 +558,8 @@ export const TieflingView = function (container, image, depthMap, options) {
 
         // Calculate proper FOV based on aspect ratio
 
-        camera = new THREE.PerspectiveCamera(45, containerWidth / containerHeight, 0.1, 1000);
+        const fov = 45;
+        camera = new THREE.PerspectiveCamera(fov, containerWidth / containerHeight, 0.1, 1000);
         camera.position.z = 4;
 
 
@@ -610,39 +616,40 @@ export const TieflingView = function (container, image, depthMap, options) {
         animationFrameId = requestAnimationFrame(animate);
 
         if (mesh) {
-            // Ease the target values
             const currentX = (mouseX + 2 * mouseXOffset) * mouseSensitivityX;
             const currentY = mouseY * mouseSensitivityY;
+
+            const mouseDistanceToCenter = Math.sqrt(currentX * currentX + currentY * currentY);
+
+            // Normalize mouse distance (0 to 1)
+            const normalizedDistance = Math.min(mouseDistanceToCenter / 2, 1);
 
             targetX += (currentX - targetX) * easing;
             targetY += (currentY - targetY) * easing;
 
-            // Base camera position
-            const baseZ = 4;
+            // Update mesh vertices based on mouse distance
+            const vertices = mesh.geometry.attributes.position.array;
+            const originalDepths = mesh.geometry.attributes.originalDepth.array;
 
-            // Calculate movement based on focus
+            for (let i = 0; i < vertices.length; i += 3) {
+                vertices[i + 2] = -originalDepths[i / 3] * -meshDepth * normalizedDistance;
+            }
+            mesh.geometry.attributes.position.needsUpdate = true;
+
+            const baseZ = 3;
             const strafeAmount = 0.5;
             const rotateAmount = 0.2;
 
-            // Strafe component (focus = 1)
             const strafeX = -targetX * strafeAmount * focus;
             const strafeY = -targetY * strafeAmount * focus;
 
-            // Rotate component (focus = 0)
             const rotateX = targetY * rotateAmount * (1 - focus);
             const rotateY = -targetX * rotateAmount * (1 - focus);
 
-            // Calculate rotation center based on focus
-            const rotationCenterZ = -2 * (1 - focus); // Closer when focus is low
+            const rotationCenterZ = -2 * (1 - focus);
 
-            // Apply transformations
-            camera.position.set(
-                strafeX,
-                strafeY,
-                baseZ
-            );
+            camera.position.set(strafeX, strafeY, baseZ);
 
-            // Apply rotation around focus point
             if (focus < 1) {
                 const rotationCenter = new THREE.Vector3(0, 0, rotationCenterZ);
                 camera.position.sub(rotationCenter);
@@ -650,8 +657,11 @@ export const TieflingView = function (container, image, depthMap, options) {
                 camera.position.add(rotationCenter);
             }
 
-            // Always look at rotation center
             camera.lookAt(new THREE.Vector3(0, 0, rotationCenterZ));
+
+            // move camera further away depending on normalized distance
+            camera.position.z = baseZ + normalizedDistance * 3;
+
         }
 
         renderer.render(scene, camera);
