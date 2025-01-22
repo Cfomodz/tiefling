@@ -481,12 +481,12 @@ export const TieflingView = function (container, image, depthMap, options) {
 
     let mouseXOffset = options.mouseXOffset || 0;
     let focus = options.focus || 0.3;
-    let baseMouseSensitivity = options.mouseSensitivity || 1;
+    let baseMouseSensitivity = options.mouseSensitivity || 0.1;
     let mouseSensitivityX = baseMouseSensitivity;
     let mouseSensitivityY = baseMouseSensitivity;
     let devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
     let meshResolution = options.meshResolution || 1024; // Resolution of the mesh grid
-    let meshDepth = options.meshDepth || 4; // Depth of the mesh grid
+    let meshDepth = options.meshDepth || 2; // Depth of the mesh grid
 
     let scene, camera, renderer, mesh;
     let mouseX = 0, mouseY = 0;
@@ -530,10 +530,9 @@ export const TieflingView = function (container, image, depthMap, options) {
         const vertices = geometry.attributes.position.array;
         const uvs = geometry.attributes.uv.array;
 
-        // Store original depth values
-        const originalDepths = new Float32Array(vertices.length / 3);
+        // Camera parameters
+        const cameraZ = 4; // Match camera's initial position.z
 
-        // Reduce depth effect at edges to minimize stretching
         for (let i = 0; i < vertices.length; i += 3) {
             const uvIndex = (i / 3) * 2;
             const u = uvs[uvIndex];
@@ -543,11 +542,15 @@ export const TieflingView = function (container, image, depthMap, options) {
             const y = Math.floor((1 - v) * depthData.height);
             const depthValue = depthData.data[(y * depthData.width + x) * 4] / 255;
 
-            originalDepths[i / 3] = depthValue;
-            vertices[i + 2] = 0; // Start with no extrusion
+            // Calculate extrusion and perspective compensation
+            const z = depthValue * meshDepth;
+            const scaleFactor = (cameraZ - z) / cameraZ;
+
+            vertices[i] *= scaleFactor; // Adjust X for perspective
+            vertices[i + 1] *= scaleFactor; // Adjust Y for perspective
+            vertices[i + 2] = z; // Set Z extrusion
         }
 
-        geometry.setAttribute('originalDepth', new THREE.BufferAttribute(originalDepths, 1));
         geometry.computeVertexNormals();
         return geometry;
     }
@@ -619,24 +622,9 @@ export const TieflingView = function (container, image, depthMap, options) {
             const currentX = (mouseX + 2 * mouseXOffset) * mouseSensitivityX;
             const currentY = mouseY * mouseSensitivityY;
 
-            const mouseDistanceToCenter = Math.sqrt(currentX * currentX + currentY * currentY);
-
-            // Normalize mouse distance (0 to 1)
-            const normalizedDistance = Math.min(mouseDistanceToCenter / 2, 1);
-
             targetX += (currentX - targetX) * easing;
             targetY += (currentY - targetY) * easing;
 
-            // Update mesh vertices based on mouse distance
-            const vertices = mesh.geometry.attributes.position.array;
-            const originalDepths = mesh.geometry.attributes.originalDepth.array;
-
-            for (let i = 0; i < vertices.length; i += 3) {
-                vertices[i + 2] = -originalDepths[i / 3] * -meshDepth * normalizedDistance;
-            }
-            mesh.geometry.attributes.position.needsUpdate = true;
-
-            const baseZ = 3;
             const strafeAmount = 0.5;
             const rotateAmount = 0.2;
 
@@ -648,7 +636,7 @@ export const TieflingView = function (container, image, depthMap, options) {
 
             const rotationCenterZ = -2 * (1 - focus);
 
-            camera.position.set(strafeX, strafeY, baseZ);
+            camera.position.set(strafeX, strafeY, 4); // Fixed Z position
 
             if (focus < 1) {
                 const rotationCenter = new THREE.Vector3(0, 0, rotationCenterZ);
@@ -658,10 +646,6 @@ export const TieflingView = function (container, image, depthMap, options) {
             }
 
             camera.lookAt(new THREE.Vector3(0, 0, rotationCenterZ));
-
-            // move camera further away depending on normalized distance
-            camera.position.z = baseZ + normalizedDistance * 3;
-
         }
 
         renderer.render(scene, camera);
