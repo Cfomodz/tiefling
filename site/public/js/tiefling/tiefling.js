@@ -523,6 +523,7 @@ export const TieflingView = function (container, image, depthMap, options) {
         const uvs = geometry.attributes.uv.array;
         const depths = new Float32Array(vertices.length / 3);
 
+        // First pass: compute initial depths and positions
         for (let i = 0; i < vertices.length; i += 3) {
             const uvIndex = (i / 3) * 2;
             const u = uvs[uvIndex];
@@ -533,13 +534,121 @@ export const TieflingView = function (container, image, depthMap, options) {
             const depthValue = depthData.data[(y * depthData.width + x) * 4] / 255;
 
             const z = depthValue * meshDepth;
-            const scaleFactor = (4 - z) / 4; // Camera at z=4
+            const scaleFactor = (4 - z) / 4;
 
             vertices[i] *= scaleFactor;
             vertices[i + 1] *= scaleFactor;
             vertices[i + 2] = z;
 
             depths[i/3] = depthValue;
+        }
+
+        // Create depth grid and calculate gradients
+        const gridWidth = width;
+        const gridHeight = height;
+        const depthGrid = new Array(gridWidth).fill().map(() => new Array(gridHeight));
+        const gradientGrid = new Array(gridWidth).fill().map(() => new Array(gridHeight));
+
+        for (let i = 0; i < depths.length; i++) {
+            const x = i % gridWidth;
+            const y = Math.floor(i / gridWidth);
+            depthGrid[x][y] = depths[i];
+        }
+
+        // Pre-calculate gradients
+        for (let x = 0; x < gridWidth; x++) {
+            for (let y = 0; y < gridHeight; y++) {
+                const dx = (x < gridWidth-1 ? depthGrid[x+1][y] : depthGrid[x][y]) -
+                    (x > 0 ? depthGrid[x-1][y] : depthGrid[x][y]);
+                const dy = (y < gridHeight-1 ? depthGrid[x][y+1] : depthGrid[x][y]) -
+                    (y > 0 ? depthGrid[x][y-1] : depthGrid[x][y]);
+                gradientGrid[x][y] = { dx, dy, mag: Math.sqrt(dx*dx + dy*dy) };
+            }
+        }
+
+        // Second pass: edge processing and concave shaping
+        for (let i = 0; i < vertices.length; i += 3) {
+            const vertexIndex = i / 3;
+            const x = vertexIndex % gridWidth;
+            const y = Math.floor(vertexIndex / gridWidth);
+            const grad = gradientGrid[x][y];
+
+            if (grad.mag > 0.1) { // Edge detection threshold
+                // Calculate inward normal towards foreground
+                const dirX = grad.dx / grad.mag;
+                const dirY = grad.dy / grad.mag;
+
+                // Find average depth in neighborhood
+                let avgDepth = 0;
+                let samples = 0;
+                for (let dx = -2; dx <= 2; dx++) {
+                    for (let dy = -2; dy <= 2; dy++) {
+                        const nx = x + dx;
+                        const ny = y + dy;
+                        if (nx >= 0 && nx < gridWidth && ny >= 0 && ny < gridHeight) {
+                            avgDepth += depthGrid[nx][ny];
+                            samples++;
+                        }
+                    }
+                }
+                avgDepth /= samples;
+
+                // Calculate concave displacement
+                const depthDifference = depthGrid[x][y] - avgDepth;
+                const concaveFactor = Math.min(1, Math.max(0, depthDifference * 2));
+
+                // Apply three-step shaping
+                const uvIndex = vertexIndex * 2;
+                const originalU = uvs[uvIndex];
+                const originalV = uvs[uvIndex + 1];
+
+                // 1. Shift UVs outward
+                const uvShift = 0.003 * (1 + concaveFactor);
+                uvs[uvIndex] = THREE.MathUtils.clamp(originalU - dirX * uvShift, 0, 1);
+                uvs[uvIndex + 1] = THREE.MathUtils.clamp(originalV - dirY * uvShift, 0, 1);
+
+                // 2. Create concave shape by moving vertices inward
+                const xyShift = 0.015 * concaveFactor;
+                vertices[i] += dirX * xyShift * vertices[i];
+                vertices[i + 1] += dirY * xyShift * vertices[i + 1];
+
+                // 3. Extrude backward based on gradient magnitude
+                const zShift = grad.mag * meshDepth * 0.4 * concaveFactor;
+                vertices[i + 2] = Math.max(0, vertices[i + 2] - zShift);
+            }
+        }
+
+        // Smoothing pass for jagged edges
+        const smoothIterations = 2;
+        for (let iter = 0; iter < smoothIterations; iter++) {
+            for (let i = 0; i < vertices.length; i += 3) {
+                const vertexIndex = i / 3;
+                const x = vertexIndex % gridWidth;
+                const y = Math.floor(vertexIndex / gridWidth);
+
+                if (gradientGrid[x][y].mag > 0.08) {
+                    let avgX = 0, avgY = 0, avgZ = 0, count = 0;
+
+                    // Average with neighbors
+                    for (let dx = -1; dx <= 1; dx++) {
+                        for (let dy = -1; dy <= 1; dy++) {
+                            const nx = x + dx;
+                            const ny = y + dy;
+                            if (nx >= 0 && nx < gridWidth && ny >= 0 && ny < gridHeight) {
+                                const idx = (ny * gridWidth + nx) * 3;
+                                avgX += vertices[idx];
+                                avgY += vertices[idx + 1];
+                                avgZ += vertices[idx + 2];
+                                count++;
+                            }
+                        }
+                    }
+
+                    vertices[i] = avgX / count;
+                    vertices[i + 1] = avgY / count;
+                    vertices[i + 2] = avgZ / count;
+                }
+            }
         }
 
         geometry.setAttribute('depth', new THREE.BufferAttribute(depths, 1));
