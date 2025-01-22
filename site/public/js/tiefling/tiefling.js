@@ -657,6 +657,7 @@ export const TieflingView = function (container, image, depthMap, options) {
         mouseY = Math.min(1, Math.max(-1, (event.clientY - rect.top) / containerHeight * 2 - 1));
 
         mouseX += 2 * mouseXOffset;
+        mouseY = -mouseY; // so it matches horizontal movement
 
         targetX = mouseX * mouseSensitivityX;
         targetY = mouseY * mouseSensitivityY;
