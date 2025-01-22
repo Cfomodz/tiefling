@@ -485,8 +485,8 @@ export const TieflingView = function (container, image, depthMap, options) {
     let mouseSensitivityX = baseMouseSensitivity;
     let mouseSensitivityY = baseMouseSensitivity;
     let devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
-    let meshResolution = options.meshResolution || 1024; // Resolution of the mesh grid
-    let meshDepth = options.meshDepth || 2; // Depth of the mesh grid
+    let meshResolution = options.meshResolution || 1024;
+    let meshDepth = options.meshDepth || 2;
 
     let scene, camera, renderer, mesh;
     let mouseX = 0, mouseY = 0;
@@ -498,40 +498,30 @@ export const TieflingView = function (container, image, depthMap, options) {
     let containerWidth = container.offsetWidth;
     let containerHeight = container.offsetHeight;
 
-    let material = new THREE.MeshBasicMaterial({
-        map: null,
-        side: THREE.DoubleSide
-    });
-
+    let material;
+    let uniforms = {
+        map: { value: null },
+        mouseDelta: { value: new THREE.Vector2(0, 0) },
+        focus: { value: focus },
+        meshDepth: { value: meshDepth },
+        sensitivity: { value: baseMouseSensitivity }
+    };
 
     init();
     animate();
 
     function createGeometry(width, height, depthData) {
         const imageAspect = depthData.width / depthData.height;
-        const containerAspect = containerWidth / containerHeight;
-
-        // Calculate dimensions to fill container
-        let planeWidth = 2;
-        let planeHeight = 2;
-        if (imageAspect > containerAspect) {
-            planeHeight = planeWidth / imageAspect;
-        } else {
-            planeWidth = planeHeight * imageAspect;
-        }
-
         const geometry = new THREE.PlaneGeometry(
-            planeWidth,
-            planeHeight,
+            imageAspect,
+            1,
             width - 1,
             height - 1
         );
 
         const vertices = geometry.attributes.position.array;
         const uvs = geometry.attributes.uv.array;
-
-        // Camera parameters
-        const cameraZ = 4; // Match camera's initial position.z
+        const depths = new Float32Array(vertices.length / 3);
 
         for (let i = 0; i < vertices.length; i += 3) {
             const uvIndex = (i / 3) * 2;
@@ -542,15 +532,17 @@ export const TieflingView = function (container, image, depthMap, options) {
             const y = Math.floor((1 - v) * depthData.height);
             const depthValue = depthData.data[(y * depthData.width + x) * 4] / 255;
 
-            // Calculate extrusion and perspective compensation
             const z = depthValue * meshDepth;
-            const scaleFactor = (cameraZ - z) / cameraZ;
+            const scaleFactor = (4 - z) / 4; // Camera at z=4
 
-            vertices[i] *= scaleFactor; // Adjust X for perspective
-            vertices[i + 1] *= scaleFactor; // Adjust Y for perspective
-            vertices[i + 2] = z; // Set Z extrusion
+            vertices[i] *= scaleFactor;
+            vertices[i + 1] *= scaleFactor;
+            vertices[i + 2] = z;
+
+            depths[i/3] = depthValue;
         }
 
+        geometry.setAttribute('depth', new THREE.BufferAttribute(depths, 1));
         geometry.computeVertexNormals();
         return geometry;
     }
@@ -559,12 +551,10 @@ export const TieflingView = function (container, image, depthMap, options) {
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0x000000);
 
-        // Calculate proper FOV based on aspect ratio
-
         const fov = 45;
         camera = new THREE.PerspectiveCamera(fov, containerWidth / containerHeight, 0.1, 1000);
         camera.position.z = 4;
-
+        camera.lookAt(0, 0, 0);
 
         renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
         renderer.outputEncoding = THREE.sRGBEncoding;
@@ -572,20 +562,15 @@ export const TieflingView = function (container, image, depthMap, options) {
         renderer.setSize(containerWidth, containerHeight);
         container.appendChild(renderer.domElement);
 
-        // Load textures
         const textureLoader = new THREE.TextureLoader();
         const imagePromise = new Promise(resolve => {
             textureLoader.load(image, texture => {
                 texture.encoding = THREE.sRGBEncoding;
-                texture.colorSpace = THREE.SRGBColorSpace;
-                texture.needsUpdate = true;
-                material.map = texture;
-                material.needsUpdate = true;
+                uniforms.map.value = texture;
                 resolve();
             });
         });
 
-        // Load depth map and create geometry
         const depthPromise = new Promise(resolve => {
             const img = new Image();
             img.src = depthMap;
@@ -597,14 +582,68 @@ export const TieflingView = function (container, image, depthMap, options) {
                 ctx.drawImage(img, 0, 0);
                 const depthData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-                // Calculate grid resolution based on aspect ratio
-                const aspect = containerWidth / containerHeight;
-                let gridWidth = aspect >= 1 ? meshResolution : Math.floor(meshResolution * aspect);
-                let gridHeight = aspect >= 1 ? Math.floor(meshResolution / aspect) : meshResolution;
+                const geometry = createGeometry(
+                    Math.min(meshResolution, img.width),
+                    Math.min(meshResolution, img.height),
+                    depthData
+                );
 
-                const geometry = createGeometry(gridWidth, gridHeight, depthData);
+                material = new THREE.ShaderMaterial({
+                    vertexShader: `
+                        uniform vec2 mouseDelta;
+                        uniform float focus;
+                        uniform float meshDepth;
+                        uniform float sensitivity;
+
+                        attribute float depth;
+
+                        varying vec2 vUv;
+
+                        void main() {
+                            vUv = uv;
+                            vec3 pos = position;
+
+                            float actualDepth = depth * meshDepth;
+                            float focusDepth = focus * meshDepth;
+
+                            // Strafe displacement (opposite direction)
+                            vec2 strafe = mouseDelta * sensitivity * focus * actualDepth * vec2(-1.0, 1.0);
+
+                            // Rotational displacement (relative to focus depth)
+                            vec2 rotate = mouseDelta * sensitivity * (1.0 - focus) * (actualDepth - focusDepth) * vec2(-1.0, 1.0);
+
+                            pos.xy += strafe + rotate;
+
+                            gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+                        }
+                    `,
+                    fragmentShader: `
+                        uniform sampler2D map;
+                        varying vec2 vUv;
+
+                        void main() {
+                            gl_FragColor = texture2D(map, vUv);
+                        }
+                    `,
+                    uniforms: uniforms,
+                    side: THREE.DoubleSide
+                });
+
                 mesh = new THREE.Mesh(geometry, material);
 
+                const containerAspect = containerWidth / containerHeight;
+                const imageAspect = depthData.width / depthData.height;
+                const visibleHeight = 2 * Math.tan(THREE.MathUtils.degToRad(fov/2)) * camera.position.z;
+                const visibleWidth = visibleHeight * camera.aspect;
+
+                let scale;
+                if (containerAspect > imageAspect) {
+                    scale = visibleHeight / geometry.parameters.height;
+                } else {
+                    scale = visibleWidth / geometry.parameters.width;
+                }
+
+                mesh.scale.set(scale, scale, 1);
                 scene.add(mesh);
                 resolve();
             };
@@ -618,34 +657,13 @@ export const TieflingView = function (container, image, depthMap, options) {
     function animate() {
         animationFrameId = requestAnimationFrame(animate);
 
+        targetX += (mouseX * mouseSensitivityX - targetX) * easing;
+        targetY += (mouseY * mouseSensitivityY - targetY) * easing;
+
         if (mesh) {
-            const currentX = (mouseX + 2 * mouseXOffset) * mouseSensitivityX;
-            const currentY = mouseY * mouseSensitivityY;
-
-            targetX += (currentX - targetX) * easing;
-            targetY += (currentY - targetY) * easing;
-
-            const strafeAmount = 0.5;
-            const rotateAmount = 0.2;
-
-            const strafeX = -targetX * strafeAmount * focus;
-            const strafeY = -targetY * strafeAmount * focus;
-
-            const rotateX = targetY * rotateAmount * (1 - focus);
-            const rotateY = -targetX * rotateAmount * (1 - focus);
-
-            const rotationCenterZ = -2 * (1 - focus);
-
-            camera.position.set(strafeX, strafeY, 4); // Fixed Z position
-
-            if (focus < 1) {
-                const rotationCenter = new THREE.Vector3(0, 0, rotationCenterZ);
-                camera.position.sub(rotationCenter);
-                camera.position.applyEuler(new THREE.Euler(rotateX, rotateY, 0, 'XYZ'));
-                camera.position.add(rotationCenter);
-            }
-
-            camera.lookAt(new THREE.Vector3(0, 0, rotationCenterZ));
+            uniforms.mouseDelta.value.set(targetX, -targetY);
+            uniforms.focus.value = focus;
+            uniforms.sensitivity.value = baseMouseSensitivity;
         }
 
         renderer.render(scene, camera);
@@ -657,10 +675,7 @@ export const TieflingView = function (container, image, depthMap, options) {
         mouseY = Math.min(1, Math.max(-1, (event.clientY - rect.top) / containerHeight * 2 - 1));
 
         mouseX += 2 * mouseXOffset;
-        mouseY = -mouseY; // so it matches horizontal movement
-
-        targetX = mouseX * mouseSensitivityX;
-        targetY = mouseY * mouseSensitivityY;
+        mouseX = -mouseX;
     }
 
     function updateMouseSensitivity() {
@@ -679,8 +694,32 @@ export const TieflingView = function (container, image, depthMap, options) {
     const onResize = () => {
         containerWidth = container.offsetWidth;
         containerHeight = container.offsetHeight;
+
+        // Update renderer and camera
         renderer.setSize(containerWidth, containerHeight);
-        material.uniforms.resolution.value.set(containerWidth, containerHeight);
+        camera.aspect = containerWidth / containerHeight;
+        camera.updateProjectionMatrix();
+
+        // Update mesh scaling
+        if (mesh) {
+            const imageAspect = mesh.geometry.parameters.width / mesh.geometry.parameters.height;
+            const containerAspect = containerWidth / containerHeight;
+
+            const visibleHeight = 2 * Math.tan(THREE.MathUtils.degToRad(camera.fov/2)) * camera.position.z;
+            const visibleWidth = visibleHeight * camera.aspect;
+
+            let scale;
+            if (containerAspect > imageAspect) {
+                // Container is wider - scale to match height
+                scale = visibleHeight / mesh.geometry.parameters.height;
+            } else {
+                // Container is taller - scale to match width
+                scale = visibleWidth / mesh.geometry.parameters.width;
+            }
+
+            mesh.scale.set(scale, scale, 1);
+        }
+
         updateMouseSensitivity();
     };
 
