@@ -961,9 +961,6 @@ export const TieflingView = function (container, image, depthMap, options) {
 
         setExpandDepthmapRadius: function(value) {
             expandDepthmapRadius = value;
-
-            // todo: reload depth map, re-create mesh
-
         }
     };
 
