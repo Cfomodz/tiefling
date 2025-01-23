@@ -4,15 +4,24 @@
 // ---URL_PREFIX--- is replaced with the actual URL in createBookmarlet in main.js
 (function() {
 
+    const domain = window.location.hostname;
     const urlPath = window.location.pathname;
 
     function getImageUrl() {
         let imageURL = '';
 
         // are we on https://www.imdb.com/title/{something}/mediaviewer?
-        if (urlPath.startsWith('/title/') && urlPath.includes('/mediaviewer')) {
+        if (domain === 'www.imdb.com' &&
+            urlPath.startsWith('/title/') &&
+            urlPath.includes('/mediaviewer')) {
             return document.querySelector('div[data-testid="media-viewer"] div[style*="calc(50% + 0px)"] img').src;
         }
+
+        // are we on https://civitai.com/images/{number}?
+        if (domain === 'civitai.com' && urlPath.startsWith('/images/')) {
+            return document.querySelector('.mantine-Carousel-slide img').src;
+        }
+
 
         // Default: return first big image
         const images = Array.from(document.getElementsByTagName('img'));
