@@ -59,7 +59,7 @@ body {
     &.dragging {
         opacity: 0.5;
         filter: blur(10px);
-        transition: all 500ms;
+        transition: all 250ms;
     }
 }
 
