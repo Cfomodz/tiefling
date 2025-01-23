@@ -88,10 +88,10 @@ export const Tiefling = function(container, options = {}) {
             let centerX = rect.left + rect.width / 2;
             let centerY = rect.top + rect.height / 2;
 
-            let radiusX = rect.width / 6;
-            let radiusY = rect.height / 6;
+            let radiusX = rect.width / 3;
+            let radiusY = rect.height / 3;
 
-            // acount for aspect ratio of container
+            // account for aspect ratio of container
             if (rect.width > rect.height) {
                 radiusY = radiusX * (rect.height / rect.width);
             } else {
