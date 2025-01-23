@@ -81,39 +81,6 @@ function postprocessImage(tensor) {
     return imageData;
 }
 
-function expandDepthMap(imageData, radius) {
-    const width = imageData.width;
-    const height = imageData.height;
-    const src = imageData.data;
-    const dst = new Uint8ClampedArray(src);
-
-    for (let r = 0; r < radius; r++) {
-        for (let y = 1; y < height-1; y++) {
-            for (let x = 1; x < width-1; x++) {
-                const idx = (y * width + x) * 4;
-                const currentDepth = src[idx];
-
-                if (currentDepth < 10) continue;
-
-                // Simple dilation: spread to adjacent pixels
-                for (let dy = -1; dy <= 1; dy++) {
-                    for (let dx = -1; dx <= 1; dx++) {
-                        const nIdx = ((y + dy) * width + (x + dx)) * 4;
-                        if (src[nIdx] < currentDepth) {
-                            dst[nIdx] = currentDepth;
-                            dst[nIdx + 1] = currentDepth;
-                            dst[nIdx + 2] = currentDepth;
-                        }
-                    }
-                }
-            }
-        }
-        // Update source for next iteration
-        src.set(dst);
-    }
-    return new ImageData(dst, width, height);
-}
-
 
 self.onmessage = async function(e) {
     const { type } = e.data;

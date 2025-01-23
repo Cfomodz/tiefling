@@ -353,8 +353,6 @@ export const generateDepthmap = function(imageFile, options = {}) {
 
     const depthmapSize = options.depthmapSize || 518;
 
-    const dilateRadius = options.dilateRadius || 7;
-
 
     /**
      * Generate a depth map from an image file using depth-anything-v2. calls a worker for the heavy lifting
@@ -429,8 +427,7 @@ export const generateDepthmap = function(imageFile, options = {}) {
                     imageData,
                     size,
                     onnxModel,
-                    wasmPaths,
-                    dilateRadius
+                    wasmPaths
                 });
             });
 
@@ -495,6 +492,7 @@ export const TieflingView = function (container, image, depthMap, options) {
     let devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
     let meshResolution = options.meshResolution || 1024;
     let meshDepth = options.meshDepth || 2;
+    let expandDepthmapRadius = options.expandDepthmapRadius || 4;
 
     let scene, camera, renderer, mesh;
     let mouseX = 0, mouseY = 0;
@@ -517,6 +515,39 @@ export const TieflingView = function (container, image, depthMap, options) {
 
     init();
     animate();
+
+    function expandDepthMap(imageData, radius) {
+        const width = imageData.width;
+        const height = imageData.height;
+        const src = imageData.data;
+        const dst = new Uint8ClampedArray(src);
+
+        for (let r = 0; r < radius; r++) {
+            for (let y = 1; y < height-1; y++) {
+                for (let x = 1; x < width-1; x++) {
+                    const idx = (y * width + x) * 4;
+                    const currentDepth = src[idx];
+
+                    if (currentDepth < 10) continue;
+
+                    // Simple dilation: spread to adjacent pixels
+                    for (let dy = -1; dy <= 1; dy++) {
+                        for (let dx = -1; dx <= 1; dx++) {
+                            const nIdx = ((y + dy) * width + (x + dx)) * 4;
+                            if (src[nIdx] < currentDepth) {
+                                dst[nIdx] = currentDepth;
+                                dst[nIdx + 1] = currentDepth;
+                                dst[nIdx + 2] = currentDepth;
+                            }
+                        }
+                    }
+                }
+            }
+            // Update source for next iteration
+            src.set(dst);
+        }
+        return new ImageData(dst, width, height);
+    }
 
     function createGeometry(width, height, depthData) {
         const imageAspect = depthData.width / depthData.height;
@@ -713,7 +744,13 @@ export const TieflingView = function (container, image, depthMap, options) {
                 canvas.height = img.height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0);
-                const depthData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                let depthData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+                // Expand depth map to fill in gaps
+                if (expandDepthmapRadius > 0) {
+                    depthData = expandDepthMap(depthData, expandDepthmapRadius);
+                }
+
 
                 const geometry = createGeometry(
                     Math.min(meshResolution, img.width),
