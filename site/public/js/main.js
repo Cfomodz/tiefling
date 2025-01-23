@@ -95,6 +95,18 @@ Alpine.data('app', () => ({
         }
     },
 
+    // add or change parameter in url
+    setURLParam(name, value, replaceState = true) {
+        const urlParams = new URLSearchParams(window.location.search);
+        urlParams.set(name, value);
+
+        if (replaceState) {
+            history.replaceState({}, '', window.location.pathname + '?' + urlParams.toString());
+        } else {
+            history.pushState({}, '', window.location.pathname + '?' + urlParams.toString());
+        }
+    },
+
     // create bookmarklet for current domain
     createBookmarklet(sourceCode) {
         // replace ---URL_PREFIX--- with current protocol, domain, port and path
@@ -122,7 +134,15 @@ Alpine.data('app', () => ({
         }
 
         if (urlParams.get('depthmap')) {
-            this.depthmapURL = urlParams.getRaw('depthmap');
+            this.depthmapImageURL = urlParams.getRaw('depthmap');
+        }
+
+        if (urlParams.get('expandDepthmapRadius')) {
+            this.expandDepthmapRadius = parseInt(urlParams.get('expandDepthmapRadius'));
+        }
+
+        if (urlParams.get('depthmapSize')) {
+            this.depthmapSize = parseInt(urlParams.get('depthmapSize'));
         }
 
         // set display mode from url param
@@ -138,32 +158,7 @@ Alpine.data('app', () => ({
 
         if (this.inputImageURL) {
 
-            if (this.depthmapURL) {
-                this.inputDataURL = this.inputImageURL;
-                this.depthmapDataURL = this.depthmapImageURL = this.depthmapURL;
-                tiefling.load3DImage(this.inputImageURL, this.depthmapURL);
-            } else {
-                this.state = "loading";
-
-                // load image file from url
-                let imageBlob;
-                try {
-                    imageBlob = await fetch(this.inputImageURL).then(response => response.blob());
-                } catch (error) {
-                    console.error("Error while loading image from URL:", error);
-                    this.state = "error";
-                    return;
-                }
-
-                // generate depth map
-                this.depthmapURL = await tiefling.getDepthmapURL(imageBlob, this.depthmapSize);
-
-                this.inputDataURL = URL.createObjectURL(imageBlob);
-                this.depthmapDataURL = this.depthmapURL;
-
-                tiefling.load3DImage(URL.createObjectURL(imageBlob), this.depthmapURL);
-                this.state = "idle";
-            }
+            this.loadImage();
 
         } else {
 
@@ -172,10 +167,8 @@ Alpine.data('app', () => ({
 
             this.depthmapImageURL = this.depthmapURL = this.depthmapDataURL = exampleImage.depthmap;
             this.inputImageURL = exampleImage.image;
-            this.inputDataURL = this.inputImageURL;
-            tiefling.load3DImage(this.inputImageURL, this.depthmapImageURL);
+            this.loadImage();
         }
-
 
     },
 
@@ -186,13 +179,10 @@ Alpine.data('app', () => ({
             let inputURL = '';
             this.depthmapURL = '';
 
-            console.log("1", this.depthmapImage);
-
             // get input image from url or uploaded or dragged file
             if (this.inputImageFile) {
                 this.inputImage = this.inputImageFile;
             } else if (this.inputImageURL) {
-                inputURL = this.inputImageURL;
                 this.inputImage = await fetch(this.inputImageURL).then(response => response.blob());
             }
 
@@ -218,21 +208,16 @@ Alpine.data('app', () => ({
 
             }
 
-            console.log("2", this.depthmapImage);
-
             this.depthmapDataURL = URL.createObjectURL(this.depthmapImage);
             this.inputDataURL = URL.createObjectURL(this.inputImage);
 
+
             // add ?input (and optional &depthmap) parameter to history, if the urls start with https
-            if (inputURL.match(/^https?:\/\//)) {
-
-                let newPath = window.location.origin + window.location.pathname + '?input=' + encodeURIComponent(inputURL);
-
+            if (this.inputImageURL.match(/^https?:\/\//)) {
+                this.setURLParam('input', this.inputImageURL);
                 if (this.depthmapURL.match(/^https?:\/\//)) {
-                    newPath += '&depthmap=' + encodeURIComponent(this.depthmapURL);
+                    this.setURLParam('depthmap', this.depthmapURL);
                 }
-
-                history.pushState({}, '', newPath);
             }
 
             this.state = "idle";
@@ -368,6 +353,8 @@ Alpine.data('app', () => ({
     updateDepthmapSize() {
         tiefling.setDepthmapSize(parseInt(this.depthmapSize));
         localStorage.setItem('depthmapSize', this.depthmapSize);
+
+        this.setURLParam('depthmapSize', this.depthmapSize);
     },
 
     updateDevicePixelRatio() {
@@ -378,6 +365,8 @@ Alpine.data('app', () => ({
     updateExpandDepthmapRadius() {
         tiefling.setExpandDepthmapRadius(parseInt(this.expandDepthmapRadius));
         localStorage.setItem('expandDepthmapRadius', this.expandDepthmapRadius);
+
+        this.setURLParam('expandDepthmapRadius', this.expandDepthmapRadius);
     },
 
     updateDisplayMode() {

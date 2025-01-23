@@ -9,9 +9,11 @@ Needs a beefy computer and works fastest in Chrome.
 - Drag &amp; Drop an image anywhere
 - Load image via the menu. Optionally load your own depth map. If none is provided, it is generated.
 - Use URL parameters: 
-  - https://tiefling.gerlach.dev?input=https://domain.com/your-image.jpeg - Load image, generate depth map. Supports JPG, PNG, WEBP, GIF (first frame)
-  - https://tiefling.gerlach.dev?input=https://domain.com/your-image.jpeg&depthmap=https://domain.com/your-depthmap.png - Load image, bring your own depth map.
-
+  - `?input=https://domain.com/your-image.jpeg` - Load image, generate depth map. Supports JPG, PNG, WEBP, GIF (first frame). In addition to `input`:
+    - `&depthmap=https://domain.com/your-depthmap.png` - Bring your own depth map.
+    - `&expandDepthmapRadius=5` - Set the Depth Map Expansion to tweak background separation during rendering
+    - `&depthmapSize=1024` - Sets Max. Depth Map Size, only used for depth map generation.
+  
 If you have a non-beefy computer, it might take a while. Click "Wait" if a dialog pops up, or let it run in a background tab. Adjust `Max. Depth Map Size` in the menu accordingly.
 
 ## Viewing images
@@ -26,9 +28,7 @@ It's a static website, all the 3D generation happens in your browser. So, host t
 
 ## Todo
 
-- Make interface usable in HSBS and FSBS VR views.
 - Anaglyph View
-- Better background fill that's still fast. Suggestions welcome.
 - WebXR?
 
 ## Thanks to
