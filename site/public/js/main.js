@@ -37,7 +37,7 @@ Alpine.data('app', () => ({
 
     focus: tiefling.getFocus(),
     devicePixelRatio: tiefling.getDevicePixelRatio(),
-    expandDepthmapRadius: 5,
+    expandDepthmapRadius: 7,
     mouseXOffset: 0.3, // for hsbs, fsbs and anaglyph modes. 0 0 no 3d, 0.3 is a good default
 
     fullscreen: false, // fullscreen selected?
