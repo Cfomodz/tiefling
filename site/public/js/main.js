@@ -130,11 +130,11 @@ Alpine.data('app', () => ({
         // ?input parameter? load image from URL
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('input')) {
-            this.inputImageURL = urlParams.getRaw('input');
+            this.inputImageURL = urlParams.get('input');
         }
 
         if (urlParams.get('depthmap')) {
-            this.depthmapImageURL = urlParams.getRaw('depthmap');
+            this.depthmapImageURL = urlParams.get('depthmap');
         }
 
         if (urlParams.get('expandDepthmapRadius')) {

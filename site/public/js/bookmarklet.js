@@ -23,7 +23,7 @@
 
     // urlPrefix: "https://example.com"
     function processImage() {
-        const imageURL = getImageUrl();
+        const imageURL = encodeURIComponent(getImageUrl());
 
         if (imageURL) {
             window.open(`---URL_PREFIX---?input=${imageURL}`, '_blank');
