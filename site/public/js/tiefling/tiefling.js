@@ -522,16 +522,26 @@ export const TieflingView = function (container, image, depthMap, options) {
         const vertices = geometry.attributes.position.array;
         const uvs = geometry.attributes.uv.array;
         const depths = new Float32Array(vertices.length / 3);
+        let depthValue;
 
         // First pass: compute initial depths and positions
         for (let i = 0; i < vertices.length; i += 3) {
             const uvIndex = (i / 3) * 2;
-            const u = uvs[uvIndex];
-            const v = uvs[uvIndex + 1];
+            const u = Math.min(1, Math.max(0, uvs[uvIndex])); // Clamp UV coordinates
+            const v = Math.min(1, Math.max(0, uvs[uvIndex + 1]));
 
-            const x = Math.floor(u * depthData.width);
-            const y = Math.floor((1 - v) * depthData.height);
-            const depthValue = depthData.data[(y * depthData.width + x) * 4] / 255;
+            // Safely calculate pixel coordinates
+            const x = Math.floor(u * (depthData.width - 1));
+            const y = Math.floor((1 - v) * (depthData.height - 1));
+
+            // Validate array index
+            const pixelIndex = (y * depthData.width + x) * 4;
+            if (pixelIndex + 3 >= depthData.data.length) {
+                console.error('Invalid depthmap access at:', x, y);
+                depthValue = 0;
+            } else {
+                depthValue = depthData.data[pixelIndex] / 255;
+            }
 
             const z = depthValue * meshDepth;
             const scaleFactor = (4 - z) / 4;
@@ -636,17 +646,23 @@ export const TieflingView = function (container, image, depthMap, options) {
                             const ny = y + dy;
                             if (nx >= 0 && nx < gridWidth && ny >= 0 && ny < gridHeight) {
                                 const idx = (ny * gridWidth + nx) * 3;
-                                avgX += vertices[idx];
-                                avgY += vertices[idx + 1];
-                                avgZ += vertices[idx + 2];
-                                count++;
+                                // Add validation for vertex indices
+                                if (idx >= 0 && idx + 2 < vertices.length) {
+                                    avgX += vertices[idx];
+                                    avgY += vertices[idx + 1];
+                                    avgZ += vertices[idx + 2];
+                                    count++;
+                                }
                             }
                         }
                     }
 
-                    vertices[i] = avgX / count;
-                    vertices[i + 1] = avgY / count;
-                    vertices[i + 2] = avgZ / count;
+                    // Only update if we have valid samples
+                    if (count > 0) {
+                        vertices[i] = avgX / count;
+                        vertices[i + 1] = avgY / count;
+                        vertices[i + 2] = avgZ / count;
+                    }
                 }
             }
         }
