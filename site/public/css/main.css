@@ -331,6 +331,10 @@ body {
         margin: 5px 0 5px 5px;
         color: var(--color-text-subtle);
 
+        &.full {
+            grid-template-columns: 1fr;
+        }
+
         .col.col-right {
             text-align: right;
         }

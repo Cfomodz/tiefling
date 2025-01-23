@@ -320,12 +320,6 @@ export const Tiefling = function(container, options = {}) {
 
         setExpandDepthmapRadius: (radius) => {
             this.expandDepthmapRadius = radius;
-            if (view1) {
-                view1.setExpandDepthmapRadius(this.expandDepthmapRadius);
-            }
-            if (view2) {
-                view2.setExpandDepthmapRadius(this.expandDepthmapRadius);
-            }
         },
 
         getPossibleDisplayModes: () => {
