@@ -37,6 +37,7 @@ Alpine.data('app', () => ({
 
     focus: tiefling.getFocus(),
     devicePixelRatio: tiefling.getDevicePixelRatio(),
+    expandDepthmapRadius: 5,
     mouseXOffset: 0.3, // for hsbs, fsbs and anaglyph modes. 0 0 no 3d, 0.3 is a good default
 
     fullscreen: false, // fullscreen selected?
@@ -62,6 +63,7 @@ Alpine.data('app', () => ({
         this.updateDepthmapSize();
         this.updateFocus();
         this.updateDevicePixelRatio();
+        this.updateExpandDepthmapRadius();
 
 
         // click anywhere outside .menu or.toggle-menu: set menuVisible to false
@@ -78,6 +80,7 @@ Alpine.data('app', () => ({
         this.depthmapSize = parseInt(localStorage.getItem('depthmapSize')) || this.depthmapSize;
         this.focus = parseFloat(localStorage.getItem('focus')) || this.focus;
         this.devicePixelRatio = parseFloat(localStorage.getItem('devicePixelRatio')) || this.devicePixelRatio;
+        this.expandDepthmapRadius = parseInt(localStorage.getItem('expandDepthmapRadius')) || this.expandDepthmapRadius;
         this.displayMode = localStorage.getItem('displayMode') || this.displayMode;
         this.mouseXOffset = parseFloat(localStorage.getItem('mouseXOffset')) || this.mouseXOffset;
     },
@@ -367,6 +370,11 @@ Alpine.data('app', () => ({
     updateDevicePixelRatio() {
         tiefling.setDevicePixelRatio(parseFloat(this.devicePixelRatio));
         localStorage.setItem('devicePixelRatio', this.devicePixelRatio);
+    },
+
+    updateExpandDepthmapRadius() {
+        tiefling.setExpandDepthmapRadius(parseInt(this.expandDepthmapRadius));
+        localStorage.setItem('expandDepthmapRadius', this.expandDepthmapRadius);
     },
 
     updateDisplayMode() {

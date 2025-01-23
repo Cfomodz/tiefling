@@ -16,6 +16,7 @@ export const Tiefling = function(container, options = {}) {
     this.depthmapSize = options.depthmapSize || 518;
     this.focus = options.focus || 0.25;
     this.devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
+    this.expandDepthmapRadius = options.expandDepthmapRadius || 5;
     this.mouseXOffset = options.mouseXOffset || 0.2;
 
 
@@ -56,6 +57,7 @@ export const Tiefling = function(container, options = {}) {
             view1 = TieflingView(container.querySelector('.inner .container-left'), image, depthMap, {
                 focus: this.focus,
                 devicePixelRatio: this.devicePixelRatio,
+                expandDepthmapRadius: this.expandDepthmapRadius,
             });
 
             if (view2) {
@@ -65,12 +67,14 @@ export const Tiefling = function(container, options = {}) {
                 mouseXOffset: -this.mouseXOffset,
                 focus: this.focus,
                 devicePixelRatio: this.devicePixelRatio,
+                expandDepthmapRadius: this.expandDepthmapRadius,
             });
         } else {
             view1 = TieflingView(container.querySelector('.inner .container-left'), image, depthMap, {
                 mouseXOffset: 0,
                 focus: this.focus,
                 devicePixelRatio: this.devicePixelRatio,
+                expandDepthmapRadius: this.expandDepthmapRadius,
             });
         }
     }
@@ -310,6 +314,20 @@ export const Tiefling = function(container, options = {}) {
             }
         },
 
+        getExpandDepthmapRadius: () => {
+            return this.expandDepthmapRadius;
+        },
+
+        setExpandDepthmapRadius: (radius) => {
+            this.expandDepthmapRadius = radius;
+            if (view1) {
+                view1.setExpandDepthmapRadius(this.expandDepthmapRadius);
+            }
+            if (view2) {
+                view2.setExpandDepthmapRadius(this.expandDepthmapRadius);
+            }
+        },
+
         getPossibleDisplayModes: () => {
             return possibleDisplayModes;
         },
@@ -492,7 +510,7 @@ export const TieflingView = function (container, image, depthMap, options) {
     let devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
     let meshResolution = options.meshResolution || 1024;
     let meshDepth = options.meshDepth || 2;
-    let expandDepthmapRadius = options.expandDepthmapRadius || 4;
+    let expandDepthmapRadius = options.expandDepthmapRadius || 5;
 
     let scene, camera, renderer, mesh;
     let mouseX = 0, mouseY = 0;
@@ -751,7 +769,6 @@ export const TieflingView = function (container, image, depthMap, options) {
                     depthData = expandDepthMap(depthData, expandDepthmapRadius);
                 }
 
-
                 const geometry = createGeometry(
                     Math.min(meshResolution, img.width),
                     Math.min(meshResolution, img.height),
@@ -946,6 +963,13 @@ export const TieflingView = function (container, image, depthMap, options) {
         },
         setMouseXOffset: function(value) {
             mouseXOffset = value;
+        },
+
+        setExpandDepthmapRadius: function(value) {
+            expandDepthmapRadius = value;
+
+            // todo: reload depth map, re-create mesh
+
         }
     };
 
