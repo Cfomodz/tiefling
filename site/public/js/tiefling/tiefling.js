@@ -353,6 +353,7 @@ export const generateDepthmap = function(imageFile, options = {}) {
 
     const depthmapSize = options.depthmapSize || 518;
 
+    const dilateRadius = options.dilateRadius || 7;
 
 
     /**
@@ -428,9 +429,12 @@ export const generateDepthmap = function(imageFile, options = {}) {
                     imageData,
                     size,
                     onnxModel,
-                    wasmPaths
+                    wasmPaths,
+                    dilateRadius
                 });
             });
+
+
 
             // create output canvas at original size
             const outputCanvas = document.createElement('canvas');
@@ -443,6 +447,10 @@ export const generateDepthmap = function(imageFile, options = {}) {
             tempCanvas.width = size;
             tempCanvas.height = size;
             const tempCtx = tempCanvas.getContext('2d');
+
+            if (!(processedImageData instanceof ImageData)) {
+                throw new Error('Invalid processed image data');
+            }
             tempCtx.putImageData(processedImageData, 0, 0);
 
             // extract relevant portion of the depth map

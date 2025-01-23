@@ -81,6 +81,39 @@ function postprocessImage(tensor) {
     return imageData;
 }
 
+function expandDepthMap(imageData, radius) {
+    const width = imageData.width;
+    const height = imageData.height;
+    const src = imageData.data;
+    const dst = new Uint8ClampedArray(src);
+
+    for (let r = 0; r < radius; r++) {
+        for (let y = 1; y < height-1; y++) {
+            for (let x = 1; x < width-1; x++) {
+                const idx = (y * width + x) * 4;
+                const currentDepth = src[idx];
+
+                if (currentDepth < 10) continue;
+
+                // Simple dilation: spread to adjacent pixels
+                for (let dy = -1; dy <= 1; dy++) {
+                    for (let dx = -1; dx <= 1; dx++) {
+                        const nIdx = ((y + dy) * width + (x + dx)) * 4;
+                        if (src[nIdx] < currentDepth) {
+                            dst[nIdx] = currentDepth;
+                            dst[nIdx + 1] = currentDepth;
+                            dst[nIdx + 2] = currentDepth;
+                        }
+                    }
+                }
+            }
+        }
+        // Update source for next iteration
+        src.set(dst);
+    }
+    return new ImageData(dst, width, height);
+}
+
 
 self.onmessage = async function(e) {
     const { type } = e.data;
@@ -96,22 +129,30 @@ self.onmessage = async function(e) {
         return;
     }
 
-    // Your existing process code
-    const { imageData, size, onnxModel } = e.data;
+    const {
+        imageData,
+        size,
+        onnxModel,
+        dilateRadius = 0,
+    } = e.data;
+
     try {
+        // Run inference
         const session = await ort.InferenceSession.create(onnxModel);
+        const preprocessed = preprocessImage(imageData, imageData.width, imageData.height);
+        const input = new ort.Tensor('float32', preprocessed, [1, 3, size, size]);
+        const results = await session.run({ image: input });
 
-        // preprocess the image
-        const preprocessed = preprocessImage(imageData, size, size);
-        const input = new ort.Tensor(new Float32Array(preprocessed), [1, 3, size, size]);
+        // Postprocess
+        let depthImage = postprocessImage(results.depth);
 
-        // run inference
-        const result = await session.run({ image: input });
+        // expand depth map
+        if (dilateRadius > 0) {
+            depthImage = expandDepthMap(depthImage, dilateRadius);
+        }
 
-        // postprocess the result
-        const processedImageData = postprocessImage(result.depth);
-
-        self.postMessage({ processedImageData }, [processedImageData.data.buffer]);
+        // Send back result
+        self.postMessage({ processedImageData: depthImage }, [depthImage.data.buffer]);
     } catch (error) {
         self.postMessage({ error: error.message });
     }
