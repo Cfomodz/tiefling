@@ -497,7 +497,7 @@ export const TieflingView = function (container, image, depthMap, options) {
 
     let mouseXOffset = options.mouseXOffset || 0;
     let focus = options.focus || 0.3;
-    let baseMouseSensitivity = options.mouseSensitivity || 0.5;
+    let baseMouseSensitivity = options.mouseSensitivity || 0.8;
     let mouseSensitivityX = baseMouseSensitivity;
     let mouseSensitivityY = baseMouseSensitivity;
     let devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
@@ -623,58 +623,6 @@ export const TieflingView = function (container, image, depthMap, options) {
                 const dy = (y < gridHeight-1 ? depthGrid[x][y+1] : depthGrid[x][y]) -
                     (y > 0 ? depthGrid[x][y-1] : depthGrid[x][y]);
                 gradientGrid[x][y] = { dx, dy, mag: Math.sqrt(dx*dx + dy*dy) };
-            }
-        }
-
-        // Second pass: edge processing and concave shaping
-        for (let i = 0; i < vertices.length; i += 3) {
-            const vertexIndex = i / 3;
-            const x = vertexIndex % gridWidth;
-            const y = Math.floor(vertexIndex / gridWidth);
-            const grad = gradientGrid[x][y];
-
-            if (grad.mag > 0.1) { // Edge detection threshold
-                // Calculate inward normal towards foreground
-                const dirX = grad.dx / grad.mag;
-                const dirY = grad.dy / grad.mag;
-
-                // Find average depth in neighborhood
-                let avgDepth = 0;
-                let samples = 0;
-                for (let dx = -2; dx <= 2; dx++) {
-                    for (let dy = -2; dy <= 2; dy++) {
-                        const nx = x + dx;
-                        const ny = y + dy;
-                        if (nx >= 0 && nx < gridWidth && ny >= 0 && ny < gridHeight) {
-                            avgDepth += depthGrid[nx][ny];
-                            samples++;
-                        }
-                    }
-                }
-                avgDepth /= samples;
-
-                // Calculate concave displacement
-                const depthDifference = depthGrid[x][y] - avgDepth;
-                const concaveFactor = Math.min(1, Math.max(0, depthDifference * 2));
-
-                // Apply three-step shaping
-                const uvIndex = vertexIndex * 2;
-                const originalU = uvs[uvIndex];
-                const originalV = uvs[uvIndex + 1];
-
-                // 1. Shift UVs outward
-                const uvShift = 0.003 * (1 + concaveFactor);
-                uvs[uvIndex] = THREE.MathUtils.clamp(originalU - dirX * uvShift, 0, 1);
-                uvs[uvIndex + 1] = THREE.MathUtils.clamp(originalV - dirY * uvShift, 0, 1);
-
-                // 2. Create concave shape by moving vertices inward
-                const xyShift = 0.015 * concaveFactor;
-                vertices[i] += dirX * xyShift * vertices[i];
-                vertices[i + 1] += dirY * xyShift * vertices[i + 1];
-
-                // 3. Extrude backward based on gradient magnitude
-                const zShift = grad.mag * meshDepth * 0.4 * concaveFactor;
-                vertices[i + 2] = Math.max(0, vertices[i + 2] - zShift);
             }
         }
 
