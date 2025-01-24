@@ -27,6 +27,12 @@
             return document.querySelector('dialog button div img[srcset]').src;
         }
 
+        // on some mastodon instance with an opened image?
+        const el = document.querySelector('.zoomable-image img');
+        if (el) {
+            return el.src;
+        }
+
 
         // default: return first big image
         const images = Array.from(document.getElementsByTagName('img'));
