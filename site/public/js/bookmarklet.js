@@ -19,7 +19,7 @@
 
         // are we on https://civitai.com/images/{number}?
         if (domain === 'civitai.com' && urlPath.startsWith('/images/')) {
-            return document.querySelector('.mantine-Carousel-slide img').src;
+            return document.querySelector('.mantine-Carousel-slide img.max-h-full').src;
         }
 
 
