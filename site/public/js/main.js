@@ -39,10 +39,15 @@ Alpine.data('app', () => ({
     devicePixelRatio: tiefling.getDevicePixelRatio(),
     expandDepthmapRadius: 7,
     mouseXOffset: 0.3, // for hsbs, fsbs and anaglyph modes. 0 0 no 3d, 0.3 is a good default
+    mouseXOffsetMin: 0,
+    mouseXOffsetMax: 0.5,
 
     fullscreen: false, // fullscreen selected?
 
     bookmarkletCode: '',
+
+    mousePosition: { x: 0, y: 0 },
+    mouseDown: false,
 
     exampleImages: ['jungle', 'portrait', 'robot', 'hoernchen', 'wombat-on-a-lawnmower', 'hotdog', 'bernd', 'cafetattoos', 'beachpeace', 'boardbear', 'crystalmountain', 'desertrace', 'spikypizza', 'bestpizza', 'mrfrog', 'seagulls', 'snack', 'rat'].map(image => ({
         'key': image,
@@ -397,7 +402,42 @@ Alpine.data('app', () => ({
             }
         });
 
+    },
+
+    adjustMouseXOffset() {
+        // in vr mode, only consider the left side
+        if (this.displayMode === 'hsbs' || this.displayMode === 'fsbs') {
+            const xPos = this.mousePosition.x/2;
+            const xPosMax = window.innerWidth / 2;
+
+            // adjust 3d strength / mouseXOffset
+            this.mouseXOffset = (xPos / xPosMax) * this.mouseXOffsetMax;
+
+            tiefling.setMouseXOffset(this.mouseXOffset);
+
+        }
+    },
+
+    onMouseDown(event) {
+        this.mouseDown = true;
+        this.mousePosition.x = event.clientX;
+        this.mousePosition.y = event.clientY;
+        this.adjustMouseXOffset()
+    },
+    onMouseUp(event) {
+        this.mouseDown = false;
+    },
+
+    onMouseMove(event) {
+        this.mousePosition.x = event.clientX;
+        this.mousePosition.y = event.clientY;
+
+        if (this.mouseDown) {
+            this.adjustMouseXOffset();
+        }
     }
+
+
 
 
 }));
