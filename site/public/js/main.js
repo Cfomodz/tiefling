@@ -40,7 +40,7 @@ Alpine.data('app', () => ({
     expandDepthmapRadius: 7,
     mouseXOffset: 0.3, // for hsbs, fsbs and anaglyph modes. 0 0 no 3d, 0.3 is a good default
     mouseXOffsetMin: 0,
-    mouseXOffsetMax: 0.5,
+    mouseXOffsetMax: 0.4,
 
     fullscreen: false, // fullscreen selected?
 
