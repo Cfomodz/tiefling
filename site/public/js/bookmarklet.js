@@ -22,6 +22,11 @@
             return document.querySelector('.mantine-Carousel-slide img.max-h-full').src;
         }
 
+        // unsplash
+        if (domain === 'unsplash.com') {
+            return document.querySelector('dialog button div img[srcset]').src;
+        }
+
 
         // Default: return first big image
         const images = Array.from(document.getElementsByTagName('img'));
