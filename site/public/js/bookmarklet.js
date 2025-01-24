@@ -28,7 +28,7 @@
         }
 
 
-        // Default: return first big image
+        // default: return first big image
         const images = Array.from(document.getElementsByTagName('img'));
         const largeImage = images.find(img => img.naturalWidth > 300);
         imageURL = largeImage ? largeImage.src : '';
@@ -38,7 +38,6 @@
     // ---URL_PREFIX--- is like "https://example.com"
     function processImage() {
         const imageURL = encodeURIComponent(getImageUrl());
-
         if (imageURL) {
             window.open(`---URL_PREFIX---?input=${imageURL}`, '_blank');
         } else {
@@ -46,6 +45,5 @@
         }
     }
 
-    // Execute the main function
     processImage();
 })();
