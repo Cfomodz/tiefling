@@ -183,7 +183,7 @@ Alpine.data('app', () => ({
             if (this.inputImageFile) {
                 this.inputImage = this.inputImageFile;
             } else if (this.inputImageURL) {
-                this.inputImage = await fetch(this.inputImageURL).then(response => response.blob());
+                this.inputImage = await fetch(this.inputImageURL, {mode: 'no-cors'}).then(response => response.blob());
             }
 
             // get depthmap image from url, uploaded or dragged file

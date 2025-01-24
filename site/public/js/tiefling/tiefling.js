@@ -13,7 +13,7 @@ export const Tiefling = function(container, options = {}) {
     // simulate mouse movement after a while for auto rotation
     this.idleMovementAfter = options.idleMovementAfter || 3000; // -1 to disable
 
-    this.depthmapSize = options.depthmapSize || 518;
+    this.depthmapSize = options.depthmapSize || 512;
     this.focus = options.focus || 0.25;
     this.devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
     this.expandDepthmapRadius = options.expandDepthmapRadius || 7;
@@ -124,7 +124,7 @@ export const Tiefling = function(container, options = {}) {
     /**
      * Load an image file and generate a depth map
      * @param file {File} Image file
-     * @param depthmapSize {number} Size of the depth map. 518: pretty fast, good quality. 1024: slower, better quality. higher or lower might throw error
+     * @param depthmapSize {number} Size of the depth map. 512: pretty fast, good quality. 1024: slower, better quality. higher or lower might throw error
      * @returns {Promise<*>} URL of the depth map
      */
     const getDepthmapURL = async (file, depthmapSize = null) => {
@@ -362,16 +362,16 @@ export const generateDepthmap = function(imageFile, options = {}) {
 
     const onnxModel = options.onnxModel || '/models/depthanythingv2-vits-dynamic-quant.onnx';
 
-    const depthmapSize = options.depthmapSize || 518;
+    const depthmapSize = options.depthmapSize || 512;
 
 
     /**
      * Generate a depth map from an image file using depth-anything-v2. calls a worker for the heavy lifting
      * @param imageFile {File} Image file
-     * @param size 518: pretty fast, good quality. 1024: slower, better quality. higher or lower might throw error
+     * @param size 512: pretty fast, good quality. 1024: slower, better quality. higher or lower might throw error
      * @returns {Promise<HTMLCanvasElement>}
      */
-    async function generate(imageFile, maxSize = 518) {
+    async function generate(imageFile, maxSize = 512) {
         try {
             const imageUrl = URL.createObjectURL(imageFile);
 
