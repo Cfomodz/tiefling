@@ -98,7 +98,6 @@ export const Tiefling = function(container, options = {}) {
                 radiusX = radiusY * (rect.width / rect.height);
             }
 
-
             const speed = 0.001;
             const time = Date.now() * speed;
 
@@ -498,12 +497,12 @@ export const TieflingView = function (container, image, depthMap, options) {
 
     let mouseXOffset = options.mouseXOffset || 0;
     let focus = options.focus || 0.3;
-    let baseMouseSensitivity = options.mouseSensitivity || 0.3;
+    let baseMouseSensitivity = options.mouseSensitivity || 0.5;
     let mouseSensitivityX = baseMouseSensitivity;
     let mouseSensitivityY = baseMouseSensitivity;
     let devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
     let meshResolution = options.meshResolution || 1024;
-    let meshDepth = options.meshDepth || 1;
+    let meshDepth = options.meshDepth || 0.8;
     let expandDepthmapRadius = options.expandDepthmapRadius || 7;
 
     let scene, camera, renderer, mesh;
@@ -866,16 +865,8 @@ export const TieflingView = function (container, image, depthMap, options) {
     }
 
     function updateMouseSensitivity() {
-        const aspect = containerWidth / containerHeight;
-        if (aspect > 1) {
-            // Wide container - increase X sensitivity
-            mouseSensitivityX = baseMouseSensitivity * aspect;
-            mouseSensitivityY = baseMouseSensitivity * 1.5;
-        } else {
-            // Tall container - increase Y sensitivity
-            mouseSensitivityX = baseMouseSensitivity;
-            mouseSensitivityY = (baseMouseSensitivity / aspect) * 1.5;
-        }
+        mouseSensitivityX = baseMouseSensitivity;
+        mouseSensitivityY = baseMouseSensitivity;
     }
 
     const onResize = () => {
