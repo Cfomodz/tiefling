@@ -35,7 +35,7 @@
         return imageURL;
     }
 
-    // urlPrefix: "https://example.com"
+    // ---URL_PREFIX--- is like "https://example.com"
     function processImage() {
         const imageURL = encodeURIComponent(getImageUrl());
 
