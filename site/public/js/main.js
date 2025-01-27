@@ -38,7 +38,7 @@ Alpine.data('app', () => ({
     focus: tiefling.getFocus(),
     devicePixelRatio: tiefling.getDevicePixelRatio(),
     expandDepthmapRadius: 7,
-    mouseXOffset: 0.3, // for hsbs, fsbs and anaglyph modes. 0 0 no 3d, 0.3 is a good default
+    mouseXOffset: 0.04, // for hsbs, fsbs and anaglyph modes. 0 = no 3d, 0.04 is a good default
     mouseXOffsetMin: 0,
     mouseXOffsetMax: 0.4,
 
