@@ -505,15 +505,22 @@ export const TieflingView = function (container, image, depthMap, options) {
     let meshDepth = options.meshDepth || 1;
     let expandDepthmapRadius = options.expandDepthmapRadius || 7;
 
+    let containerWidth = container.offsetWidth;
+    let containerHeight = container.offsetHeight;
+
     let scene, camera, renderer, mesh;
     let mouseX = 0, mouseY = 0;
     let targetX = 0, targetY = 0;
+    let imageAspectRatio;
 
-    const easing = 0.1;
+    /// background and cut-off area
+    let bgScene, mainScene, bgMesh;
+    let scissorX = 0, scissorY = 0, scissorWidth = containerWidth, scissorHeight = containerHeight;
+
+
+    const easing = 0.1; // higher: snappier movement
     let animationFrameId;
 
-    let containerWidth = container.offsetWidth;
-    let containerHeight = container.offsetHeight;
 
     let material;
     let uniforms = {
@@ -526,6 +533,143 @@ export const TieflingView = function (container, image, depthMap, options) {
 
     init();
     animate();
+
+    function init() {
+        bgScene = new THREE.Scene();
+        mainScene = new THREE.Scene();
+        mainScene.background = null;
+
+        const fov = 45;
+        camera = new THREE.PerspectiveCamera(fov, containerWidth / containerHeight, 0.1, 1000);
+        camera.position.z = 4;
+        camera.lookAt(0, 0, 0);
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: true });
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.setPixelRatio(devicePixelRatio);
+        renderer.setSize(containerWidth, containerHeight);
+
+        updateScissorDimensions();
+
+
+        container.appendChild(renderer.domElement);
+
+        const textureLoader = new THREE.TextureLoader();
+        const imagePromise = new Promise(resolve => {
+            textureLoader.load(image, texture => {
+                texture.encoding = THREE.sRGBEncoding;
+                uniforms.map.value = texture;
+                imageAspectRatio = texture.image.width / texture.image.height;
+                resolve();
+            });
+        });
+
+        const depthPromise = new Promise(resolve => {
+            const img = new Image();
+            img.src = depthMap;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                let depthData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+                // Expand depth map to fill in gaps
+                if (expandDepthmapRadius > 0) {
+                    depthData = expandDepthMap(depthData, expandDepthmapRadius);
+                }
+
+                const geometry = createGeometry(
+                    Math.min(meshResolution, img.width),
+                    Math.min(meshResolution, img.height),
+                    depthData
+                );
+
+                material = new THREE.ShaderMaterial({
+                    vertexShader: `
+                        uniform vec2 mouseDelta;
+                        uniform float focus;
+                        uniform float meshDepth;
+                        uniform float sensitivity;
+
+                        attribute float depth;
+
+                        varying vec2 vUv;
+
+                        void main() {
+                            vUv = uv;
+                            vec3 pos = position;
+                            
+                            float actualDepth = depth * meshDepth;
+                            float focusDepth = focus * meshDepth;
+                            float cameraZ = 1.5; // as low as possible to not distort things like faces too much on movement
+
+                            // Rotational displacement (relative to focus depth)
+                            vec2 rotate = mouseDelta * sensitivity * 
+                                (1.0 - focus) * 
+                                (actualDepth - focusDepth) * 
+                                vec2(-1.0, 1.0);
+
+                            pos.xy += rotate;
+
+                            gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+                        }
+                    `,
+                    fragmentShader: `
+                        uniform sampler2D map;
+                        varying vec2 vUv;
+
+                        void main() {
+                            gl_FragColor = texture2D(map, vUv);
+                        }
+                    `,
+                    uniforms: uniforms,
+                    side: THREE.DoubleSide
+                });
+
+                mesh = new THREE.Mesh(geometry, material);
+
+                const containerAspect = containerWidth / containerHeight;
+                const imageAspect = depthData.width / depthData.height;
+                const visibleHeight = 2 * Math.tan(THREE.MathUtils.degToRad(fov/2)) * camera.position.z;
+                const visibleWidth = visibleHeight * camera.aspect;
+
+                let scale;
+                if (containerAspect > imageAspect) {
+                    scale = visibleHeight / geometry.parameters.height;
+                } else {
+                    scale = visibleWidth / geometry.parameters.width;
+                }
+
+                mesh.scale.set(scale, scale, 1);
+                mainScene.add(mesh);
+
+                // Create background mesh
+                const bgGeometry = new THREE.PlaneGeometry(1, 1);
+                const bgMaterial = new THREE.MeshBasicMaterial({
+                    map: uniforms.map.value,
+                    side: THREE.DoubleSide
+                });
+                bgMesh = new THREE.Mesh(bgGeometry, bgMaterial);
+                bgScene.add(bgMesh);
+
+                // Position and scale background
+                const bgDistance = 10;
+                bgMesh.position.z = -bgDistance;
+                const bgVisibleHeight = 2 * bgDistance * Math.tan(THREE.MathUtils.degToRad(fov/2));
+                const bgVisibleWidth = bgVisibleHeight * (containerWidth / containerHeight);
+                bgMesh.scale.set(bgVisibleWidth, bgVisibleHeight, 1);
+
+
+                resolve();
+            };
+        });
+
+        Promise.all([imagePromise, depthPromise]).then(() => {
+            onResize();
+        });
+    }
 
     function expandDepthMap(imageData, radius) {
         const width = imageData.width;
@@ -670,117 +814,25 @@ export const TieflingView = function (container, image, depthMap, options) {
         return geometry;
     }
 
-    function init() {
-        scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x000000);
+    function updateScissorDimensions() {
 
-        const fov = 45;
-        camera = new THREE.PerspectiveCamera(fov, containerWidth / containerHeight, 0.1, 1000);
-        camera.position.z = 4;
-        camera.lookAt(0, 0, 0);
+        console.log(imageAspectRatio); // undefined or NaN
 
-        renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-        renderer.outputEncoding = THREE.sRGBEncoding;
-        renderer.setPixelRatio(devicePixelRatio);
-        renderer.setSize(containerWidth, containerHeight);
-        container.appendChild(renderer.domElement);
 
-        const textureLoader = new THREE.TextureLoader();
-        const imagePromise = new Promise(resolve => {
-            textureLoader.load(image, texture => {
-                texture.encoding = THREE.sRGBEncoding;
-                uniforms.map.value = texture;
-                resolve();
-            });
-        });
+        if (!imageAspectRatio) return; // Skip if image hasn't loaded yet
 
-        const depthPromise = new Promise(resolve => {
-            const img = new Image();
-            img.src = depthMap;
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0);
-                let depthData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
-                // Expand depth map to fill in gaps
-                if (expandDepthmapRadius > 0) {
-                    depthData = expandDepthMap(depthData, expandDepthmapRadius);
-                }
 
-                const geometry = createGeometry(
-                    Math.min(meshResolution, img.width),
-                    Math.min(meshResolution, img.height),
-                    depthData
-                );
-
-                material = new THREE.ShaderMaterial({
-                    vertexShader: `
-                        uniform vec2 mouseDelta;
-                        uniform float focus;
-                        uniform float meshDepth;
-                        uniform float sensitivity;
-
-                        attribute float depth;
-
-                        varying vec2 vUv;
-
-                        void main() {
-                            vUv = uv;
-                            vec3 pos = position;
-                            
-                            float actualDepth = depth * meshDepth;
-                            float focusDepth = focus * meshDepth;
-                            float cameraZ = 1.5;
-
-                            // Rotational displacement (relative to focus depth)
-                            vec2 rotate = mouseDelta * sensitivity * 
-                                (1.0 - focus) * 
-                                (actualDepth - focusDepth) * 
-                                vec2(-1.0, 1.0);
-
-                            pos.xy += rotate;
-
-                            gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
-                        }
-                    `,
-                    fragmentShader: `
-                        uniform sampler2D map;
-                        varying vec2 vUv;
-
-                        void main() {
-                            gl_FragColor = texture2D(map, vUv);
-                        }
-                    `,
-                    uniforms: uniforms,
-                    side: THREE.DoubleSide
-                });
-
-                mesh = new THREE.Mesh(geometry, material);
-
-                const containerAspect = containerWidth / containerHeight;
-                const imageAspect = depthData.width / depthData.height;
-                const visibleHeight = 2 * Math.tan(THREE.MathUtils.degToRad(fov/2)) * camera.position.z;
-                const visibleWidth = visibleHeight * camera.aspect;
-
-                let scale;
-                if (containerAspect > imageAspect) {
-                    scale = visibleHeight / geometry.parameters.height;
-                } else {
-                    scale = visibleWidth / geometry.parameters.width;
-                }
-
-                mesh.scale.set(scale, scale, 1);
-                scene.add(mesh);
-                resolve();
-            };
-        });
-
-        Promise.all([imagePromise, depthPromise]).then(() => {
-            updateMouseSensitivity();
-        });
+        const containerAspect = containerWidth / containerHeight;
+        if (containerAspect > imageAspectRatio) {
+            scissorHeight = containerHeight;
+            scissorWidth = containerHeight * imageAspectRatio;
+        } else {
+            scissorWidth = containerWidth;
+            scissorHeight = containerWidth / imageAspectRatio;
+        }
+        scissorX = (containerWidth - scissorWidth) / 2;
+        scissorY = (containerHeight - scissorHeight) / 2;
     }
 
     function animate() {
@@ -795,7 +847,16 @@ export const TieflingView = function (container, image, depthMap, options) {
             uniforms.sensitivity.value = baseMouseSensitivity;
         }
 
-        renderer.render(scene, camera);
+        // Render background and main scene
+        renderer.setScissorTest(false);
+        renderer.render(bgScene, camera);
+
+        if (scissorWidth > 0 && scissorHeight > 0) {
+            console.log("yay ", scissorWidth, scissorHeight);
+            renderer.setScissorTest(true);
+            renderer.setScissor(scissorX, scissorY, scissorWidth, scissorHeight);
+            renderer.render(mainScene, camera);
+        }
     }
 
     function onMouseMove(event) {
@@ -816,12 +877,21 @@ export const TieflingView = function (container, image, depthMap, options) {
         containerWidth = container.offsetWidth;
         containerHeight = container.offsetHeight;
 
-        // Update renderer and camera
         renderer.setSize(containerWidth, containerHeight);
         camera.aspect = containerWidth / containerHeight;
         camera.updateProjectionMatrix();
 
-        // Update mesh scaling
+        updateScissorDimensions();
+
+        // Update background mesh scale
+        if (bgMesh) {
+            const bgDistance = 10;
+            const bgVisibleHeight = 2 * bgDistance * Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
+            const bgVisibleWidth = bgVisibleHeight * (containerWidth / containerHeight);
+            bgMesh.scale.set(bgVisibleWidth, bgVisibleHeight, 1);
+        }
+
+        // Update main mesh scaling (existing code)
         if (mesh) {
             const imageAspect = mesh.geometry.parameters.width / mesh.geometry.parameters.height;
             const containerAspect = containerWidth / containerHeight;
@@ -831,10 +901,8 @@ export const TieflingView = function (container, image, depthMap, options) {
 
             let scale;
             if (containerAspect > imageAspect) {
-                // Container is wider - scale to match height
                 scale = visibleHeight / mesh.geometry.parameters.height;
             } else {
-                // Container is taller - scale to match width
                 scale = visibleWidth / mesh.geometry.parameters.width;
             }
 
@@ -862,6 +930,12 @@ export const TieflingView = function (container, image, depthMap, options) {
                 material.dispose();
             }
 
+            if (bgMesh) {
+                bgMesh.geometry.dispose();
+                bgMesh.material.dispose();
+                bgScene.remove(bgMesh);
+            }
+
             if (renderer) {
                 renderer.dispose();
                 container.removeChild(renderer.domElement);
@@ -871,7 +945,8 @@ export const TieflingView = function (container, image, depthMap, options) {
                 cancelAnimationFrame(animationFrameId);
             }
 
-            scene = null;
+            mainScene = null;
+            bgScene = null;
             camera = null;
             renderer = null;
             mesh = null;
