@@ -497,7 +497,7 @@ export const TieflingView = function (container, image, depthMap, options) {
 
     let mouseXOffset = options.mouseXOffset || 0;
     let focus = options.focus || 0.3;
-    let baseMouseSensitivity = options.mouseSensitivity || 0.4;
+    let baseMouseSensitivity = options.mouseSensitivity || 0.3;
     let mouseSensitivityX = baseMouseSensitivity;
     let mouseSensitivityY = baseMouseSensitivity;
     let devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
@@ -733,7 +733,7 @@ export const TieflingView = function (container, image, depthMap, options) {
 
                             float actualDepth = depth * meshDepth;
                             float focusDepth = focus * meshDepth;
-                            float cameraZ = 4.0;
+                            float cameraZ = 1.5;
 
                             // Strafe displacement (inversely proportional to camera distance)
                             vec2 strafe = mouseDelta * sensitivity * focus * 
