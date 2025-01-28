@@ -730,15 +730,10 @@ export const TieflingView = function (container, image, depthMap, options) {
                         void main() {
                             vUv = uv;
                             vec3 pos = position;
-
+                            
                             float actualDepth = depth * meshDepth;
                             float focusDepth = focus * meshDepth;
                             float cameraZ = 1.5;
-
-                            // Strafe displacement (inversely proportional to camera distance)
-                            vec2 strafe = mouseDelta * sensitivity * focus * 
-                                (1.0 / (cameraZ - actualDepth)) * 
-                                vec2(-1.0, 1.0);
 
                             // Rotational displacement (relative to focus depth)
                             vec2 rotate = mouseDelta * sensitivity * 
@@ -746,7 +741,7 @@ export const TieflingView = function (container, image, depthMap, options) {
                                 (actualDepth - focusDepth) * 
                                 vec2(-1.0, 1.0);
 
-                            pos.xy += strafe + rotate;
+                            pos.xy += rotate;
 
                             gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
                         }
