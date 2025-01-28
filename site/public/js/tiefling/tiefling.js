@@ -383,43 +383,61 @@ export const generateDepthmap = function(imageFile, options = {}) {
                 image.src = imageUrl;
             });
 
-            // determine the actual processing size
+
+            // depht-anything-v2 wants the image to be square. so expand and scale it, then cut
+            // the resulting depth map back down to the original aspect ratio and size
+
             const size = Math.min(
                 maxSize,
                 Math.max(image.width, image.height)
             );
-
-            // create a canvas for the resized input
-            const resizeCanvas = document.createElement('canvas');
-            const resizeCtx = resizeCanvas.getContext('2d');
-            resizeCanvas.width = size;
-            resizeCanvas.height = size;
-
-            // resize image maintaining aspect ratio
             const scale = Math.min(size / image.width, size / image.height);
-            const scaledWidth = Math.round(image.width * scale);
-            const scaledHeight = Math.round(image.height * scale);
+            const scaledWidth = Math.ceil(image.width * scale);
+            const scaledHeight = Math.ceil(image.height * scale);
 
-            // center the image
-            const offsetX = (size - scaledWidth) / 2;
-            const offsetY = (size - scaledHeight) / 2;
+            // canvas of size of the image
+            const resizedCanvas = document.createElement('canvas');
+            const resizedCtx = resizedCanvas.getContext('2d');
+            resizedCanvas.width = image.width;
+            resizedCanvas.height = image.height;
 
-            // draw black background
-            resizeCtx.fillStyle = '#000000';
-            resizeCtx.fillRect(0, 0, size, size);
+            // draw image in canvas
+            resizedCtx.drawImage(image, 0, 0);
 
-            // draw resized image
-            resizeCtx.drawImage(image, offsetX, offsetY, scaledWidth, scaledHeight);
+            // two-step scaling and expanding, to avoid artifacts. not that it helps much
 
-            // get image data from resized image
-            const imageData = resizeCtx.getImageData(0, 0, size, size);
+            // scale canvas down to scaledWidth, scaledHeight
+            const scaledCanvas = document.createElement('canvas');
+            const scaledCtx = scaledCanvas.getContext('2d');
+            scaledCanvas.width = scaledWidth;
+            scaledCanvas.height = scaledHeight;
 
-            // Create worker
+            scaledCtx.drawImage(resizedCanvas, 0, 0, scaledWidth, scaledHeight);
+
+            // expand canvas to size x size
+            const expandedCanvas = document.createElement('canvas');
+            const expandedCtx = expandedCanvas.getContext('2d');
+            expandedCanvas.width = size;
+            expandedCanvas.height = size;
+
+            // draw image centered
+            const offsetX = Math.ceil((size - scaledWidth) / 2);
+            const offsetY = Math.ceil((size - scaledHeight) / 2);
+
+            // to avoid white lines at the edges, draw the right/left/top/bottom a few pixel sliver of the image again
+            expandedCtx.drawImage(scaledCanvas, offsetX-2, offsetY);
+            expandedCtx.drawImage(scaledCanvas, offsetX+2, offsetY);
+            expandedCtx.drawImage(scaledCanvas, offsetX, offsetY-2);
+            expandedCtx.drawImage(scaledCanvas, offsetX, offsetY+2);
+
+            expandedCtx.drawImage(scaledCanvas, offsetX, offsetY);
+
+            const imageData = expandedCtx.getImageData(0, 0, size, size);
+
             const worker = new Worker('/js/worker.js', {
                 type: 'module'
             });
 
-            // Use worker to process the image
             const processedImageData = await new Promise((resolve, reject) => {
                 worker.onmessage = function(e) {
                     if (e.data.error) {
@@ -442,8 +460,6 @@ export const generateDepthmap = function(imageFile, options = {}) {
                 });
             });
 
-
-
             // square temp canvas for the depth map
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = size;
@@ -455,24 +471,25 @@ export const generateDepthmap = function(imageFile, options = {}) {
             }
             tempCtx.putImageData(processedImageData, 0, 0);
 
-            // output canvas at original size
-            const outputCanvas = document.createElement('canvas');
-            outputCanvas.width = image.width;
-            outputCanvas.height = image.height;
-            const outputCtx = outputCanvas.getContext('2d');
+            // cut canvas back down to scaledWidth, scaledHeigh, keeping it centered
+            const cutCanvas = document.createElement('canvas');
+            const cutCtx = cutCanvas.getContext('2d');
+            cutCanvas.width = scaledWidth;
+            cutCanvas.height = scaledHeight;
+            cutCtx.drawImage(tempCanvas, -offsetX, -offsetY, size, size);
 
-            // extract relevant portion of the square depth map
-            outputCtx.drawImage(
-                tempCanvas,
-                offsetX, offsetY, scaledWidth, scaledHeight,
-                0, 0, image.width, image.height
-            );
+            // scale back up to image width, image height
+            const finalCanvas = document.createElement('canvas');
+            const finalCtx = finalCanvas.getContext('2d');
+            finalCanvas.width = image.width;
+            finalCanvas.height = image.height;
+            finalCtx.drawImage(cutCanvas, 0, 0, image.width, image.height);
 
             // clean up
             worker.terminate();
             URL.revokeObjectURL(imageUrl);
 
-            return outputCanvas;
+            return finalCanvas;
 
         } catch (error) {
             console.error("error in generateDepthMap:", error);
