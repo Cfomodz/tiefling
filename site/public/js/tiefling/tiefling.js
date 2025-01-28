@@ -1,4 +1,4 @@
-import * as THREE from '/js/tiefling/node_modules/three/build/three.module.js';
+    import * as THREE from '/js/tiefling/node_modules/three/build/three.module.js';
 
 
 
@@ -508,7 +508,7 @@ export const TieflingView = function (container, image, depthMap, options) {
     let containerWidth = container.offsetWidth;
     let containerHeight = container.offsetHeight;
 
-    let scene, camera, renderer, mesh;
+    let camera, renderer, mesh;
     let mouseX = 0, mouseY = 0;
     let targetX = 0, targetY = 0;
     let imageAspectRatio;
@@ -548,6 +548,18 @@ export const TieflingView = function (container, image, depthMap, options) {
         renderer.outputEncoding = THREE.sRGBEncoding;
         renderer.setPixelRatio(devicePixelRatio);
         renderer.setSize(containerWidth, containerHeight);
+
+        // add image as background-image, centered, with background-size: contain
+        let rendererCanvas = renderer.domElement;
+        rendererCanvas.style.backgroundImage = `url(${image})`;
+        rendererCanvas.style.backgroundSize = 'contain';
+        rendererCanvas.style.backgroundPosition = 'center';
+        rendererCanvas.style.backgroundRepeat = 'no-repeat';
+
+
+
+
+
 
         updateScissorDimensions();
 
@@ -644,23 +656,6 @@ export const TieflingView = function (container, image, depthMap, options) {
 
                 mesh.scale.set(scale, scale, 1);
                 mainScene.add(mesh);
-
-                // Create background mesh
-                const bgGeometry = new THREE.PlaneGeometry(1, 1);
-                const bgMaterial = new THREE.MeshBasicMaterial({
-                    map: uniforms.map.value,
-                    side: THREE.DoubleSide
-                });
-                bgMesh = new THREE.Mesh(bgGeometry, bgMaterial);
-                bgScene.add(bgMesh);
-
-                // Position and scale background
-                const bgDistance = 10;
-                bgMesh.position.z = -bgDistance;
-                const bgVisibleHeight = 2 * bgDistance * Math.tan(THREE.MathUtils.degToRad(fov/2));
-                const bgVisibleWidth = bgVisibleHeight * (containerWidth / containerHeight);
-                bgMesh.scale.set(bgVisibleWidth, bgVisibleHeight, 1);
-
 
                 resolve();
             };
@@ -815,13 +810,7 @@ export const TieflingView = function (container, image, depthMap, options) {
     }
 
     function updateScissorDimensions() {
-
-        console.log(imageAspectRatio); // undefined or NaN
-
-
         if (!imageAspectRatio) return; // Skip if image hasn't loaded yet
-
-
 
         const containerAspect = containerWidth / containerHeight;
         if (containerAspect > imageAspectRatio) {
@@ -847,12 +836,8 @@ export const TieflingView = function (container, image, depthMap, options) {
             uniforms.sensitivity.value = baseMouseSensitivity;
         }
 
-        // Render background and main scene
-        renderer.setScissorTest(false);
-        renderer.render(bgScene, camera);
-
+        // Then render main scene with perspective camera and scissor
         if (scissorWidth > 0 && scissorHeight > 0) {
-            console.log("yay ", scissorWidth, scissorHeight);
             renderer.setScissorTest(true);
             renderer.setScissor(scissorX, scissorY, scissorWidth, scissorHeight);
             renderer.render(mainScene, camera);
@@ -883,15 +868,6 @@ export const TieflingView = function (container, image, depthMap, options) {
 
         updateScissorDimensions();
 
-        // Update background mesh scale
-        if (bgMesh) {
-            const bgDistance = 10;
-            const bgVisibleHeight = 2 * bgDistance * Math.tan(THREE.MathUtils.degToRad(camera.fov/2));
-            const bgVisibleWidth = bgVisibleHeight * (containerWidth / containerHeight);
-            bgMesh.scale.set(bgVisibleWidth, bgVisibleHeight, 1);
-        }
-
-        // Update main mesh scaling (existing code)
         if (mesh) {
             const imageAspect = mesh.geometry.parameters.width / mesh.geometry.parameters.height;
             const containerAspect = containerWidth / containerHeight;
@@ -906,7 +882,11 @@ export const TieflingView = function (container, image, depthMap, options) {
                 scale = visibleWidth / mesh.geometry.parameters.width;
             }
 
+            // Scale both meshes the same way
             mesh.scale.set(scale, scale, 1);
+            if (bgMesh) {
+                bgMesh.scale.set(scale, scale, 1);
+            }
         }
 
         updateMouseSensitivity();
