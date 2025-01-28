@@ -497,19 +497,19 @@ export const TieflingView = function (container, image, depthMap, options) {
 
     let mouseXOffset = options.mouseXOffset || 0;
     let focus = options.focus || 0.3;
-    let baseMouseSensitivity = options.mouseSensitivity || 0.6;
+    let baseMouseSensitivity = options.mouseSensitivity || 0.4;
     let mouseSensitivityX = baseMouseSensitivity;
     let mouseSensitivityY = baseMouseSensitivity;
     let devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
     let meshResolution = options.meshResolution || 1024;
-    let meshDepth = options.meshDepth || 0.8;
+    let meshDepth = options.meshDepth || 1;
     let expandDepthmapRadius = options.expandDepthmapRadius || 7;
 
     let scene, camera, renderer, mesh;
     let mouseX = 0, mouseY = 0;
     let targetX = 0, targetY = 0;
 
-    const easing = 0.05;
+    const easing = 0.1;
     let animationFrameId;
 
     let containerWidth = container.offsetWidth;
