@@ -444,13 +444,7 @@ export const generateDepthmap = function(imageFile, options = {}) {
 
 
 
-            // create output canvas at original size
-            const outputCanvas = document.createElement('canvas');
-            outputCanvas.width = image.width;
-            outputCanvas.height = image.height;
-            const outputCtx = outputCanvas.getContext('2d');
-
-            // create temporary canvas for the depth map
+            // square temp canvas for the depth map
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = size;
             tempCanvas.height = size;
@@ -461,7 +455,13 @@ export const generateDepthmap = function(imageFile, options = {}) {
             }
             tempCtx.putImageData(processedImageData, 0, 0);
 
-            // extract relevant portion of the depth map
+            // output canvas at original size
+            const outputCanvas = document.createElement('canvas');
+            outputCanvas.width = image.width;
+            outputCanvas.height = image.height;
+            const outputCtx = outputCanvas.getContext('2d');
+
+            // extract relevant portion of the square depth map
             outputCtx.drawImage(
                 tempCanvas,
                 offsetX, offsetY, scaledWidth, scaledHeight,

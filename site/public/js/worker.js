@@ -119,11 +119,6 @@ self.onmessage = async function(e) {
         // Postprocess
         let depthImage = postprocessImage(results.depth);
 
-        // expand depth map
-        if (dilateRadius > 0) {
-            depthImage = expandDepthMap(depthImage, dilateRadius);
-        }
-
         // Send back result
         self.postMessage({ processedImageData: depthImage }, [depthImage.data.buffer]);
     } catch (error) {
