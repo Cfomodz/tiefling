@@ -1,7 +1,13 @@
 import * as ort from '/js/tiefling/node_modules/onnxruntime-web/dist/ort.mjs';
 let initialized = false;
 
-// Move the preprocessImage and postprocessImage functions here
+/**
+ * Convert RGBA to RGB, then reformat as RRRR... GGGG... BBBB
+ * @param input_imageData
+ * @param width
+ * @param height
+ * @returns {Float32Array}
+ */
 function preprocessImage(input_imageData, width, height) {
     var floatArr = new Float32Array(width * height * 3);
     var floatArr1 = new Float32Array(width * height * 3);
@@ -38,7 +44,7 @@ function preprocessImage(input_imageData, width, height) {
 }
 
 /**
- * Postprocess the depth map tensor to an ImageData object
+ * convert depth map tensor to ImageData object
  * thx to akbartus https://github.com/akbartus/DepthAnything-on-Browser
  * @param tensor
  * @returns {ImageData}
