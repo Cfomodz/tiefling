@@ -424,11 +424,14 @@ export const generateDepthmap = function(imageFile, options = {}) {
             const offsetX = Math.ceil((size - scaledWidth) / 2);
             const offsetY = Math.ceil((size - scaledHeight) / 2);
 
-            // to avoid white lines at the edges, draw the right/left/top/bottom a few pixel sliver of the image again
-            expandedCtx.drawImage(scaledCanvas, offsetX-2, offsetY);
-            expandedCtx.drawImage(scaledCanvas, offsetX+2, offsetY);
-            expandedCtx.drawImage(scaledCanvas, offsetX, offsetY-2);
-            expandedCtx.drawImage(scaledCanvas, offsetX, offsetY+2);
+            // to avoid white lines at the edges, stretch the image outwards a few pixel
+            if (image.width > image.height) {
+                expandedCtx.drawImage(scaledCanvas, offsetX, offsetY-2);
+                expandedCtx.drawImage(scaledCanvas, offsetX, offsetY+2);
+            } else if (image.height > image.width) {
+                expandedCtx.drawImage(scaledCanvas, offsetX-2, offsetY);
+                expandedCtx.drawImage(scaledCanvas, offsetX+2, offsetY);
+            }
 
             expandedCtx.drawImage(scaledCanvas, offsetX, offsetY);
 
