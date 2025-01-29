@@ -49,12 +49,134 @@ Alpine.data('app', () => ({
     mousePosition: { x: 0, y: 0 },
     mouseDown: false,
 
-    exampleImages: ['jungle', 'portrait', 'robot', 'hoernchen', 'wombat-on-a-lawnmower', 'hotdog', 'bernd', 'cafetattoos', 'beachpeace', 'boardbear', 'crystalmountain', 'desertrace', 'spikypizza', 'bestpizza', 'mrfrog', 'seagulls', 'snack', 'rat'].map(image => ({
-        'key': image,
-        'image': 'img/examples/' + image + '.jpg',
-        'thumb': 'img/examples/' + image + '_thumb.jpg',
-        'depthmap': 'img/examples/' + image + '_depthmap.png'
-    })),
+    exampleImages: [
+        {
+            'key': 'jungle',
+            'image': 'img/examples/jungle.jpg',
+            'thumb': 'img/examples/jungle_thumb.jpg',
+            'depthmap': 'img/examples/jungle_depthmap.png',
+            'expandDepthmapRadius': 7
+        },
+        {
+            'key': 'portrait',
+            'image': 'img/examples/portrait.jpg',
+            'thumb': 'img/examples/portrait_thumb.jpg',
+            'depthmap': 'img/examples/portrait_depthmap.png',
+            'expandDepthmapRadius': 5
+        },
+        {
+            'key': 'robot',
+            'image': 'img/examples/robot.jpg',
+            'thumb': 'img/examples/robot_thumb.jpg',
+            'depthmap': 'img/examples/robot_depthmap.png',
+            'expandDepthmapRadius': 8
+        },
+        {
+            'key': 'hoernchen',
+            'image': 'img/examples/hoernchen.jpg',
+            'thumb': 'img/examples/hoernchen_thumb.jpg',
+            'depthmap': 'img/examples/hoernchen_depthmap.png',
+            'expandDepthmapRadius': 6
+        },
+        {
+            'key': 'wombat-on-a-lawnmower',
+            'image': 'img/examples/wombat-on-a-lawnmower.jpg',
+            'thumb': 'img/examples/wombat-on-a-lawnmower_thumb.jpg',
+            'depthmap': 'img/examples/wombat-on-a-lawnmower_depthmap.png',
+            'expandDepthmapRadius': 7
+        },
+        {
+            'key': 'hotdog',
+            'image': 'img/examples/hotdog.jpg',
+            'thumb': 'img/examples/hotdog_thumb.jpg',
+            'depthmap': 'img/examples/hotdog_depthmap.png',
+            'expandDepthmapRadius': 5
+        },
+        {
+            'key': 'bernd',
+            'image': 'img/examples/bernd.jpg',
+            'thumb': 'img/examples/bernd_thumb.jpg',
+            'depthmap': 'img/examples/bernd_depthmap.png',
+            'expandDepthmapRadius': 4
+        },
+        {
+            'key': 'cafetattoos',
+            'image': 'img/examples/cafetattoos.jpg',
+            'thumb': 'img/examples/cafetattoos_thumb.jpg',
+            'depthmap': 'img/examples/cafetattoos_depthmap.png',
+            'expandDepthmapRadius': 7
+        },
+        {
+            'key': 'beachpeace',
+            'image': 'img/examples/beachpeace.jpg',
+            'thumb': 'img/examples/beachpeace_thumb.jpg',
+            'depthmap': 'img/examples/beachpeace_depthmap.png',
+            'expandDepthmapRadius': 7
+        },
+        {
+            'key': 'boardbear',
+            'image': 'img/examples/boardbear.jpg',
+            'thumb': 'img/examples/boardbear_thumb.jpg',
+            'depthmap': 'img/examples/boardbear_depthmap.png',
+            'expandDepthmapRadius': 10
+        },
+        {
+            'key': 'crystalmountain',
+            'image': 'img/examples/crystalmountain.jpg',
+            'thumb': 'img/examples/crystalmountain_thumb.jpg',
+            'depthmap': 'img/examples/crystalmountain_depthmap.png',
+            'expandDepthmapRadius': 8
+        },
+        {
+            'key': 'desertrace',
+            'image': 'img/examples/desertrace.jpg',
+            'thumb': 'img/examples/desertrace_thumb.jpg',
+            'depthmap': 'img/examples/desertrace_depthmap.png',
+            'expandDepthmapRadius': 7
+        },
+        {
+            'key': 'spikypizza',
+            'image': 'img/examples/spikypizza.jpg',
+            'thumb': 'img/examples/spikypizza_thumb.jpg',
+            'depthmap': 'img/examples/spikypizza_depthmap.png',
+            'expandDepthmapRadius': 5
+        },
+        {
+            'key': 'bestpizza',
+            'image': 'img/examples/bestpizza.jpg',
+            'thumb': 'img/examples/bestpizza_thumb.jpg',
+            'depthmap': 'img/examples/bestpizza_depthmap.png',
+            'expandDepthmapRadius': 12
+        },
+        {
+            'key': 'mrfrog',
+            'image': 'img/examples/mrfrog.jpg',
+            'thumb': 'img/examples/mrfrog_thumb.jpg',
+            'depthmap': 'img/examples/mrfrog_depthmap.png',
+            'expandDepthmapRadius': 7
+        },
+        {
+            'key': 'seagulls',
+            'image': 'img/examples/seagulls.jpg',
+            'thumb': 'img/examples/seagulls_thumb.jpg',
+            'depthmap': 'img/examples/seagulls_depthmap.png',
+            'expandDepthmapRadius': 7
+        },
+        {
+            'key': 'snack',
+            'image': 'img/examples/snack.jpg',
+            'thumb': 'img/examples/snack_thumb.jpg',
+            'depthmap': 'img/examples/snack_depthmap.png',
+            'expandDepthmapRadius': 7
+        },
+        {
+            'key': 'rat',
+            'image': 'img/examples/rat.jpg',
+            'thumb': 'img/examples/rat_thumb.jpg',
+            'depthmap': 'img/examples/rat_depthmap.png',
+            'expandDepthmapRadius': 7
+        }
+    ],
 
 
     async init() {
@@ -359,7 +481,7 @@ Alpine.data('app', () => ({
         tiefling.setDepthmapSize(parseInt(this.depthmapSize));
         localStorage.setItem('depthmapSize', this.depthmapSize);
 
-        this.setURLParam('depthmapSize', this.depthmapSize);
+        //this.setURLParam('depthmapSize', this.depthmapSize);
     },
 
     updateDevicePixelRatio() {
@@ -371,7 +493,7 @@ Alpine.data('app', () => ({
         tiefling.setExpandDepthmapRadius(parseInt(this.expandDepthmapRadius));
         localStorage.setItem('expandDepthmapRadius', this.expandDepthmapRadius);
 
-        this.setURLParam('expandDepthmapRadius', this.expandDepthmapRadius);
+        //this.setURLParam('expandDepthmapRadius', this.expandDepthmapRadius);
     },
 
     updateDisplayMode() {

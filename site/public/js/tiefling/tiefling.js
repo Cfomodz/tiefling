@@ -16,7 +16,7 @@ export const Tiefling = function(container, options = {}) {
     this.depthmapSize = options.depthmapSize || 512;
     this.focus = options.focus || 0.25;
     this.devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
-    this.expandDepthmapRadius = options.expandDepthmapRadius || 5;
+    this.expandDepthmapRadius = options.expandDepthmapRadius || 7;
     this.mouseXOffset = options.mouseXOffset || 0.2;
 
 
@@ -523,7 +523,7 @@ export const TieflingView = function (container, image, depthMap, options) {
     let devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
     let meshResolution = options.meshResolution || 1024;
     let meshDepth = options.meshDepth || 1;
-    let expandDepthmapRadius = options.expandDepthmapRadius || 5;
+    let expandDepthmapRadius = options.expandDepthmapRadius || 7;
 
     let containerWidth = container.offsetWidth;
     let containerHeight = container.offsetHeight;
