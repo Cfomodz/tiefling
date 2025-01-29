@@ -516,7 +516,7 @@ export const generateDepthmap = function(imageFile, options = {}) {
 export const TieflingView = function (container, image, depthMap, options) {
 
     let mouseXOffset = options.mouseXOffset || 0;
-    let focus = options.focus || 0.3;
+    let focus = options.focus || 0.25;
     let baseMouseSensitivity = options.mouseSensitivity || 0.5;
     let mouseSensitivityX = baseMouseSensitivity;
     let mouseSensitivityY = baseMouseSensitivity;
@@ -569,17 +569,6 @@ export const TieflingView = function (container, image, depthMap, options) {
         renderer.setPixelRatio(devicePixelRatio);
         renderer.setSize(containerWidth, containerHeight);
 
-        // add image as background-image, centered, with background-size: contain
-        let rendererCanvas = renderer.domElement;
-        rendererCanvas.style.backgroundImage = `url(${image})`;
-        rendererCanvas.style.backgroundSize = 'contain';
-        rendererCanvas.style.backgroundPosition = 'center';
-        rendererCanvas.style.backgroundRepeat = 'no-repeat';
-
-
-
-
-
 
         updateScissorDimensions();
 
@@ -624,27 +613,34 @@ export const TieflingView = function (container, image, depthMap, options) {
                         uniform float focus;
                         uniform float meshDepth;
                         uniform float sensitivity;
-
+                        
                         attribute float depth;
-
+                        
                         varying vec2 vUv;
-
+                        
                         void main() {
                             vUv = uv;
                             vec3 pos = position;
                             
                             float actualDepth = depth * meshDepth;
                             float focusDepth = focus * meshDepth;
-                            float cameraZ = 1.5; // as low as possible to not distort things like faces too much on movement
-
+                            float cameraZ = 1.5;
+                        
                             // Rotational displacement (relative to focus depth)
                             vec2 rotate = mouseDelta * sensitivity * 
                                 (1.0 - focus) * 
                                 (actualDepth - focusDepth) * 
                                 vec2(-1.0, 1.0);
-
-                            pos.xy += rotate;
-
+                        
+                            // Calculate edge proximity factor (0 at edges, 1 in center)
+                            float edgeWidth = 0.01; // controls edge stiffness
+                            vec2 edgeFactorVec = smoothstep(0.0, edgeWidth, vUv) * 
+                                                smoothstep(1.0, 1.0 - edgeWidth, vUv);
+                            float edgeFactor = edgeFactorVec.x * edgeFactorVec.y;
+                        
+                            // Apply displacement with edge preservation
+                            pos.xy += rotate * edgeFactor;
+                        
                             gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
                         }
                     `,
@@ -847,8 +843,12 @@ export const TieflingView = function (container, image, depthMap, options) {
     function animate() {
         animationFrameId = requestAnimationFrame(animate);
 
-        targetX += (mouseX * mouseSensitivityX - targetX) * easing;
-        targetY += (mouseY * mouseSensitivityY - targetY) * easing;
+        // during rendering, strafing mouse movement seems stronger. so adjust based on focus
+        // focus = 0.5: 1. focus = 0: 0.3
+        const mouseSensitivityFocusFactor = 0.3 + 0.7 * 2 * focus;
+        
+        targetX += (mouseSensitivityFocusFactor * mouseX * mouseSensitivityX - targetX) * easing;
+        targetY += (mouseSensitivityFocusFactor * mouseY * mouseSensitivityY - targetY) * easing;
 
         if (mesh) {
             uniforms.mouseDelta.value.set(targetX, -targetY);
