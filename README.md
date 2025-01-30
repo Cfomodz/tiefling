@@ -20,7 +20,7 @@ Needs a beefy computer for higher depth map sizes (1024 takes about 20s on an M1
 
 ## Viewing images
 
-Move your mouse to change perspective. If it feels choppy, adjust the `Render Quality` in the menu.
+Move your mouse to change perspective. If it feels choppy, adjust the **Render Quality** in the menu.
 
 
 ## VR
