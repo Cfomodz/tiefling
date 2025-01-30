@@ -22,7 +22,12 @@ Needs a beefy computer for higher depth map sizes (1024 takes about 20s on an M1
 
 Move your mouse to change perspective. If it feels choppy, adjust the `Render Quality` in the menu.
 
-To view images in real 3D, mirror your computer screen to your VR headset. [Virtual Desktop](https://www.vrdesktop.net/) works well. Switch to `Half SBS` or `Full SBS` in the Tiefling menu, then do the same in Virtual Desktop. Works best in fullscreen. Switch back to normal view in Virtual Desktop to adjust settings.  
+
+## VR
+
+To view images in neat 3D, mirror your computer screen to your VR headset. [Virtual Desktop](https://www.vrdesktop.net/) works well. Switch to `Half SBS` or `Full SBS` in the Tiefling menu, then do the same in Virtual Desktop. Works best in fullscreen. Switch back to normal view in Virtual Desktop to adjust settings.  
+
+You can also drag the VR cursor from left to right on the whole image to adjust 3D Strength / IPD. 
 
 ## Options
 
