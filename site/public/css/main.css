@@ -459,7 +459,7 @@ body {
     .example-image {
         display: grid;
         position: relative;
-        height: 59px;
+        height: 58.5px;
         border-radius: var(--border-radius);
         background-color: var(--color-dark);
         background-size: contain;
