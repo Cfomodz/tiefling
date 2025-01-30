@@ -1,6 +1,6 @@
 # 2D-to-3D parallax image converter and (VR-)viewer
 
-Generates a depth map with DepthAnythingV2, then renders s 3D parallax view if the image to simulste depth. 
+Generates a depth map with DepthAnythingV2, then renders a 3D parallax view of the image to simulate depth. 
 
 Runs locally and privately in your browser.  
 
