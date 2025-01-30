@@ -183,6 +183,7 @@ Alpine.data('app', () => ({
 
         this.loadSettings();
         this.handleURLParams();
+
         this.generateBookmarkletLink();
 
         await this.initialLoadImage();

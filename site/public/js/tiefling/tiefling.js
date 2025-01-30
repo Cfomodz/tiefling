@@ -14,10 +14,11 @@ export const Tiefling = function(container, options = {}) {
     this.idleMovementAfter = options.idleMovementAfter || 3000; // -1 to disable
 
     this.depthmapSize = options.depthmapSize || 1024;
-    this.focus = options.focus || 0.25;
+
+    this.focus = options.focus ?? 0.25;
     this.devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
-    this.expandDepthmapRadius = options.expandDepthmapRadius || 7;
-    this.mouseXOffset = options.mouseXOffset || 0.2;
+    this.expandDepthmapRadius = options.expandDepthmapRadius ?? 7;
+    this.mouseXOffset = options.mouseXOffset ?? 0.2;
 
 
     let view1, view2;
@@ -515,15 +516,16 @@ export const generateDepthmap = function(imageFile, options = {}) {
  */
 export const TieflingView = function (container, image, depthMap, options) {
 
-    let mouseXOffset = options.mouseXOffset || 0;
-    let focus = options.focus || 0.25;
+    let mouseXOffset = options.mouseXOffset ? options.mouseXOffset : 0;
+
+    let focus = options.focus ?? 0.25;
     let baseMouseSensitivity = options.mouseSensitivity || 0.5;
     let mouseSensitivityX = baseMouseSensitivity;
     let mouseSensitivityY = baseMouseSensitivity;
     let devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
     let meshResolution = options.meshResolution || 1024;
     let meshDepth = options.meshDepth || 1;
-    let expandDepthmapRadius = options.expandDepthmapRadius || 7;
+    let expandDepthmapRadius = options.expandDepthmapRadius ?? 7;
 
     let containerWidth = container.offsetWidth;
     let containerHeight = container.offsetHeight;
