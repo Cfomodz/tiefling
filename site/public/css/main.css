@@ -446,8 +446,9 @@ body {
     display: inline-block;
     background: var(--color-text-subtle);
     color: var(--color-light);
-    border-radius: var(--border-radius);
-    padding: 5px 10px;
+    border-radius: 30px;
+    padding: 7px 12px;
+    margin-top: 10px;
 }
 
 .example-images {
