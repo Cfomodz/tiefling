@@ -11,7 +11,7 @@ Needs a beefy computer for higher depth map sizes (1024 takes about 20s on an M1
 - Drag &amp; Drop an image anywhere
 - Load an image via the menu (enter URL, upload a file or drag&drop one on the field). Optionally load your own depth map. If none is provided, it is generated.
 - Use URL parameters: 
-  - `?input={urlencoded url of image}` - Load image, generate depth map. Supports JPG, PNG, WEBP, GIF (first frame). In addition to `input`:
+  - `?input={urlencoded url of image}` - Load image, generate depth map. Supports all formats the browser supports. In addition to `input`:
     - `&depthmap={urlencoded url of depth map image}` - Bring your own depth map.
     - `&expandDepthmapRadius=5` - Set the Depth Map Expansion to tweak background separation during rendering
     - `&depthmapSize=1024` - Sets Max. Depth Map Size, only used for depth map generation.
