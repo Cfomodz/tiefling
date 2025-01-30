@@ -13,7 +13,7 @@ export const Tiefling = function(container, options = {}) {
     // simulate mouse movement after a while for auto rotation
     this.idleMovementAfter = options.idleMovementAfter || 3000; // -1 to disable
 
-    this.depthmapSize = options.depthmapSize || 512;
+    this.depthmapSize = options.depthmapSize || 1024;
     this.focus = options.focus || 0.25;
     this.devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
     this.expandDepthmapRadius = options.expandDepthmapRadius || 7;
