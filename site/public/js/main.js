@@ -205,11 +205,11 @@ Alpine.data('app', () => ({
     // load various settings from local storage
     loadSettings() {
         this.depthmapSize = parseInt(localStorage.getItem('depthmapSize')) || this.depthmapSize;
-        this.focus = parseFloat(localStorage.getItem('focus')) || this.focus;
+        this.focus = localStorage.getItem('focus') ? parseFloat(localStorage.getItem('focus')) : this.focus;
         this.devicePixelRatio = parseFloat(localStorage.getItem('devicePixelRatio')) || this.devicePixelRatio;
-        this.expandDepthmapRadius = parseInt(localStorage.getItem('expandDepthmapRadius')) || this.expandDepthmapRadius;
+        this.expandDepthmapRadius = localStorage.getItem('expandDepthmapRadius') ? parseInt(localStorage.getItem('expandDepthmapRadius')) : this.expandDepthmapRadius;
         this.displayMode = localStorage.getItem('displayMode') || this.displayMode;
-        this.mouseXOffset = parseFloat(localStorage.getItem('mouseXOffset')) || this.mouseXOffset;
+        this.mouseXOffset = localStorage.getItem('mouseXOffset') ? parseFloat(localStorage.getItem('mouseXOffset')) : this.mouseXOffset;
     },
 
 
@@ -276,6 +276,7 @@ Alpine.data('app', () => ({
         if (urlParams.get("displayMode")) {
             this.displayMode = this.possibleDisplayModes.contains(urlParams.get("displayMode")) ? urlParams.get("displayMode") : 'full';
         }
+
     },
 
 
@@ -480,8 +481,6 @@ Alpine.data('app', () => ({
     updateDepthmapSize() {
         tiefling.setDepthmapSize(parseInt(this.depthmapSize));
         localStorage.setItem('depthmapSize', this.depthmapSize);
-
-        //this.setURLParam('depthmapSize', this.depthmapSize);
     },
 
     updateDevicePixelRatio() {
@@ -492,8 +491,6 @@ Alpine.data('app', () => ({
     updateExpandDepthmapRadius() {
         tiefling.setExpandDepthmapRadius(parseInt(this.expandDepthmapRadius));
         localStorage.setItem('expandDepthmapRadius', this.expandDepthmapRadius);
-
-        //this.setURLParam('expandDepthmapRadius', this.expandDepthmapRadius);
     },
 
     updateDisplayMode() {
