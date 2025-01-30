@@ -538,7 +538,7 @@ export const TieflingView = function (container, image, depthMap, options) {
     let scissorX = 0, scissorY = 0, scissorWidth = containerWidth, scissorHeight = containerHeight;
 
 
-    const easing = 0.1; // higher: snappier movement
+    const easing = 0.05; // higher: snappier movement
     let animationFrameId;
 
 
@@ -624,7 +624,7 @@ export const TieflingView = function (container, image, depthMap, options) {
                             
                             float actualDepth = depth * meshDepth;
                             float focusDepth = focus * meshDepth;
-                            float cameraZ = 1.5;
+                            float cameraZ = 1.4;
                         
                             // Rotational displacement (relative to focus depth)
                             vec2 rotate = mouseDelta * sensitivity * 
@@ -846,7 +846,7 @@ export const TieflingView = function (container, image, depthMap, options) {
         // during rendering, strafing mouse movement seems stronger. so adjust based on focus
         // focus = 0.5: 1. focus = 0: 0.3
         const mouseSensitivityFocusFactor = 0.3 + 0.7 * 2 * focus;
-        
+
         targetX += (mouseSensitivityFocusFactor * mouseX * mouseSensitivityX - targetX) * easing;
         targetY += (mouseSensitivityFocusFactor * mouseY * mouseSensitivityY - targetY) * easing;
 
