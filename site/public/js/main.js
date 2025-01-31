@@ -209,9 +209,9 @@ Alpine.data('app', () => ({
             }
         });
 
-        // hide interface and mouse cursor when pressing cmd|ctrl+h
+        // hide interface and mouse cursor when pressing alt+h
         document.addEventListener('keydown', (event) => {
-            if ((event.metaKey || event.ctrlKey) && event.key === 'h') {
+            if (event.altKey && event.code === 'KeyH') {
                 document.body.classList.toggle('hide-interface');
             }
         });
