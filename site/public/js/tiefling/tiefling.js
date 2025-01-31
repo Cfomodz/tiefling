@@ -877,8 +877,6 @@ export const TieflingView = function (container, image, depthMap, options) {
     function animate() {
         animationFrameId = requestAnimationFrame(animate);
 
-        console.log("in animate", deviceOrientationXOffset);
-
         // during rendering, strafing mouse movement seems stronger. so adjust based on focus
         // focus = 0.5: 1. focus = 0: 0.3
         const mouseSensitivityFocusFactor = 0.3 + 0.7 * 2 * focus;
