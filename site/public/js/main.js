@@ -42,6 +42,17 @@ Alpine.data('app', () => ({
     mouseXOffsetMin: 0,
     mouseXOffsetMax: 0.4,
 
+    // optionally rotate image by rotating device
+    deviceOrientationPossible: window.DeviceOrientationEvent ? true : false,
+    deviceOrientationEnabled: true,
+    deviceOrientationXOffset: 0,
+    deviceOrientationXOffsetMin: -0.2,
+    deviceOrientationXOffsetMax: 0.2,
+    deviceOrientationYOffset: 0,
+    deviceOrientationYOffsetMin: -0.2,
+    deviceOrientationYOffsetMax: 0.2,
+
+
     fullscreen: false, // fullscreen selected?
 
     bookmarkletCode: '',
@@ -181,6 +192,7 @@ Alpine.data('app', () => ({
 
     async init() {
 
+        this.initOrientationSensors();
         this.loadSettings();
         this.handleURLParams();
 
@@ -201,6 +213,41 @@ Alpine.data('app', () => ({
             }
         });
 
+    },
+
+    initOrientationSensors() {
+        if (this.deviceOrientationPossible) {
+            window.addEventListener('deviceorientation', (event) => {
+
+                if (!this.deviceOrientationEnabled) return;
+
+                // thx to https://developer.mozilla.org/en-US/docs/Web/API/Device_orientation_events/Detecting_device_orientation
+                let x = event.beta; // In degree in the range [-180,180)
+                let y = event.gamma; // In degree in the range [-90,90)
+
+                // Because we don't want to have the device upside down
+                // We constrain the x value to the range [-90,90]
+                if (x > 90) {
+                    x = 90;
+                }
+                if (x < -90) {
+                    x = -90;
+                }
+
+                // To make computation easier we shift the range of
+                // x and y to [0,180]
+                x += 90;
+                y += 90;
+
+                // map between min and max values
+                this.deviceOrientationXOffset = (x / 180) * (this.deviceOrientationXOffsetMax - this.deviceOrientationXOffsetMin) + this.deviceOrientationXOffsetMin;
+                this.deviceOrientationYOffset = (y / 180) * (this.deviceOrientationYOffsetMax - this.deviceOrientationYOffsetMin) + this.deviceOrientationYOffsetMin;
+
+                tiefling.setDeviceOrientationXOffset(this.deviceOrientationXOffset);
+                tiefling.setDeviceOrientationYOffset(this.deviceOrientationYOffset);
+
+            });
+        }
     },
 
     // load various settings from local storage
