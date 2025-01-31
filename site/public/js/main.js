@@ -44,7 +44,7 @@ Alpine.data('app', () => ({
 
     // optionally rotate image by rotating device
     deviceOrientationPossible: window.DeviceOrientationEvent ? true : false,
-    deviceOrientationEnabled: true,
+    deviceOrientationEnabled: false,
     deviceOrientationXOffset: 0,
     deviceOrientationXOffsetMin: -0.2,
     deviceOrientationXOffsetMax: 0.2,
