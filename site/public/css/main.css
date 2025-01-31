@@ -476,3 +476,11 @@ body {
     right: 6px;
     background-color: var(--color-text);
 }
+
+body.hide-interface {
+    .controls {
+        display: none;
+    }
+    cursor: none !important;
+
+}

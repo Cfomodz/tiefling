@@ -209,6 +209,13 @@ Alpine.data('app', () => ({
             }
         });
 
+        // hide interface and mouse cursor when pressing cmd|ctrl+h
+        document.addEventListener('keydown', (event) => {
+            if ((event.metaKey || event.ctrlKey) && event.key === 'h') {
+                document.body.classList.toggle('hide-interface');
+            }
+        });
+
     },
 
     initOrientationSensors() {
