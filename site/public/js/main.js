@@ -238,7 +238,7 @@ Alpine.data('app', () => ({
         this.focus = localStorage.getItem('focus') ? parseFloat(localStorage.getItem('focus')) : this.focus;
         this.devicePixelRatio = parseFloat(localStorage.getItem('devicePixelRatio')) || this.devicePixelRatio;
         this.expandDepthmapRadius = localStorage.getItem('expandDepthmapRadius') ? parseInt(localStorage.getItem('expandDepthmapRadius')) : this.expandDepthmapRadius;
-        this.idleMovementEnabled = localStorage.getItem('idleMovementEnabled') === 'true' ?? true;
+        this.idleMovementEnabled = localStorage.getItem('idleMovementEnabled') !== 'false';
         this.deviceOrientationEnabled = localStorage.getItem('deviceOrientationEnabled') === 'true' ?? true;
         this.displayMode = localStorage.getItem('displayMode') || this.displayMode;
         this.mouseXOffset = localStorage.getItem('mouseXOffset') ? parseFloat(localStorage.getItem('mouseXOffset')) : this.mouseXOffset;
