@@ -189,15 +189,22 @@
                         </div>
                     </div>
                 </div>
+                <div class="menu-row">
+                    <div class="input-checkbox">
+                        <input type="checkbox" id="idleMovementEnabled" x-model="idleMovementEnabled" @change="updateIdleMovementEnabled()">
+                        <label for="idleMovementEnabled">Move Camera when Idle</label>
+                    </div>
+                </div>
                 <!--
                 <div class="menu-row" x-show="deviceOrientationPossible">
                     <div class="input-checkbox">
-                        <input type="checkbox" id="deviceOrientationEnabled" x-model="deviceOrientationEnabled">
-                        <label for="fullscreen">Move Camera by Rotating your Device</label>
-                    </div>
-                    <div>
-                        xoffset: <span x-text="deviceOrientationXOffset"></span><br>
-                        yoffset: <span x-text="deviceOrientationYOffset"></span>
+                        <input type="checkbox" id="deviceOrientationEnabled" x-model="deviceOrientationEnabled" @change="updateDeviceOrientationEnabled()">
+                        <label for="deviceOrientationEnabled">
+                            Move Camera by Rotating your Device
+                        </label>
+                        <span class="info" style="display: block; margin-top: 10px; margin-left: 0;">
+                            Tap Screen to Reset Camera
+                        </span>
                     </div>
                 </div>-->
                 <div class="menu-row">

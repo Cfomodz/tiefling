@@ -11,6 +11,7 @@ export const Tiefling = function(container, options = {}) {
     }
 
     // simulate mouse movement after a while for auto rotation
+    this.idleMovementEnabled = options.idleMovementEnabled ?? true;
     this.idleMovementAfter = options.idleMovementAfter || 3000;
 
     this.depthmapSize = options.depthmapSize || 1024;
@@ -19,10 +20,6 @@ export const Tiefling = function(container, options = {}) {
     this.devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
     this.expandDepthmapRadius = options.expandDepthmapRadius ?? 7;
     this.mouseXOffset = options.mouseXOffset ?? 0.2;
-
-    this.deviceOrientationXOffset = options.deviceOrientationXOffset ?? 0;
-    this.deviceOrientationYOffset = options.deviceOrientationYOffset ?? 0;
-
 
     let view1, view2;
     let lastMouseMovementTime = Date.now();
@@ -62,8 +59,6 @@ export const Tiefling = function(container, options = {}) {
                 focus: this.focus,
                 devicePixelRatio: this.devicePixelRatio,
                 expandDepthmapRadius: this.expandDepthmapRadius,
-                deviceOrientationXOffset: this.deviceOrientationXOffset,
-                deviceOrientationYOffset: this.deviceOrientationYOffset
             });
 
             if (view2) {
@@ -74,8 +69,6 @@ export const Tiefling = function(container, options = {}) {
                 focus: this.focus,
                 devicePixelRatio: this.devicePixelRatio,
                 expandDepthmapRadius: this.expandDepthmapRadius,
-                deviceOrientationXOffset: this.deviceOrientationXOffset,
-                deviceOrientationYOffset: this.deviceOrientationYOffset
             });
         } else {
             view1 = TieflingView(container.querySelector('.inner .container-left'), image, depthMap, {
@@ -83,15 +76,14 @@ export const Tiefling = function(container, options = {}) {
                 focus: this.focus,
                 devicePixelRatio: this.devicePixelRatio,
                 expandDepthmapRadius: this.expandDepthmapRadius,
-                deviceOrientationXOffset: this.deviceOrientationXOffset,
-                deviceOrientationYOffset: this.deviceOrientationYOffset
             });
         }
     }
 
     // check if the mouse hasn't been moved in 3 seconds. if so, move the mouse in a circle around the center of the container
     const checkMouseMovement = () => {
-        if (this.idleMovementAfter >= 0 && Date.now() - lastMouseMovementTime > this.idleMovementAfter) {
+
+        if (this.idleMovementEnabled && this.idleMovementAfter >= 0 && Date.now() - lastMouseMovementTime > this.idleMovementAfter) {
 
             let rect = container.getBoundingClientRect();
 
@@ -350,25 +342,9 @@ export const Tiefling = function(container, options = {}) {
             }
         },
 
-        setDeviceOrientationXOffset: (value) => {
-            this.deviceOrientationXOffset = value;
-            if (view1) {
-                view1.setDeviceOrientationXOffset(this.deviceOrientationXOffset);
-            }
-            if (view2) {
-                view2.setDeviceOrientationXOffset(this.deviceOrientationXOffset);
-            }
+        setIdleMovementEnabled: (value) => {
+            this.idleMovementEnabled = value;
         },
-
-        setDeviceOrientationYOffset: (value) => {
-            this.deviceOrientationYOffset = value;
-            if (view1) {
-                view1.setDeviceOrientationYOffset(this.deviceOrientationYOffset);
-            }
-            if (view2) {
-                view2.setDeviceOrientationYOffset(this.deviceOrientationYOffset);
-            }
-        }
 
     }
 
@@ -546,9 +522,6 @@ export const generateDepthmap = function(imageFile, options = {}) {
 export const TieflingView = function (container, image, depthMap, options) {
 
     let mouseXOffset = options.mouseXOffset ?? 0;
-
-    let deviceOrientationXOffset = options.deviceOrientationXOffset ?? 0;
-    let deviceOrientationYOffset = options.deviceOrientationYOffset ?? 0;
 
     let focus = options.focus ?? 0.25;
     let baseMouseSensitivity = options.mouseSensitivity || 0.5;
@@ -881,8 +854,8 @@ export const TieflingView = function (container, image, depthMap, options) {
         // focus = 0.5: 1. focus = 0: 0.3
         const mouseSensitivityFocusFactor = 0.3 + 0.7 * 2 * focus;
 
-        targetX += (mouseSensitivityFocusFactor * (mouseX + deviceOrientationXOffset) * mouseSensitivityX - targetX) * easing;
-        targetY += (mouseSensitivityFocusFactor * (mouseY + deviceOrientationYOffset) * mouseSensitivityY - targetY) * easing;
+        targetX += (mouseSensitivityFocusFactor * mouseX * mouseSensitivityX - targetX) * easing;
+        targetY += (mouseSensitivityFocusFactor * mouseY * mouseSensitivityY - targetY) * easing;
 
         if (mesh) {
             uniforms.mouseDelta.value.set(targetX, -targetY);
@@ -1003,12 +976,6 @@ export const TieflingView = function (container, image, depthMap, options) {
             mouseXOffset = value;
         },
 
-        setDeviceOrientationXOffset: function(value) {
-            deviceOrientationXOffset = value;
-        },
-        setDeviceOrientationYOffset: function(value) {
-            deviceOrientationYOffset = value;
-        },
 
         setExpandDepthmapRadius: function(value) {
             expandDepthmapRadius = value;
