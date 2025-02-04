@@ -8,7 +8,7 @@ Runs locally and privately in your browser.
 
 Needs a beefy computer for higher depth map sizes (1024 takes about 20s on an M1 Pro, use ~600 on fast smartphones). 
 
-<video src="https://tiefling.app/tiefling-demo.mp4" width="400"></video>
+https://github.com/user-attachments/assets/8df87945-a159-4fad-b566-82d7943b2991
 
 ## Loading images
 
