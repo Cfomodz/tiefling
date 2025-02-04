@@ -1,5 +1,3 @@
-<video src="https://tiefling.app/tiefling-demo.mp4"></video>
-
 # &rarr; [tiefling.app](https://tiefling.app)
 
 # 2D-to-3D parallax image converter and (VR-)viewer
@@ -9,6 +7,8 @@ Generates a depth map with DepthAnythingV2, then renders a 3D parallax view of t
 Runs locally and privately in your browser.  
 
 Needs a beefy computer for higher depth map sizes (1024 takes about 20s on an M1 Pro, use ~600 on fast smartphones). 
+
+<video src="https://tiefling.app/tiefling-demo.mp4" width="400"></video>
 
 ## Loading images
 
