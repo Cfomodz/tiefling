@@ -451,7 +451,7 @@ Alpine.data('app', () => ({
 
         // clear depthmap
         this.depthmapImage = this.depthmapImageFile = this.depthmapImageURL = this.depthmapURL = this.depthmapDataURL = null;
-
+        this.resetShare();
     },
 
     // Handle file drop on input field
@@ -479,6 +479,7 @@ Alpine.data('app', () => ({
             console.error("Error while handling dropped file:", error);
             this.state = "error";
         }
+        this.resetShare();
     },
 
     // on depthmap file upload
@@ -487,8 +488,8 @@ Alpine.data('app', () => ({
         if (!file) return;
         this.depthmapImageURL = "";
         this.depthmapImageFile = file;
-
         this.depthmapDataURL = URL.createObjectURL(file);
+        this.resetShare();
     },
 
 
@@ -513,6 +514,8 @@ Alpine.data('app', () => ({
             console.error("Error while handling dropped file:", error);
             this.state = "error";
         }
+
+        this.resetShare();
     },
 
     removeDepthmap() {
