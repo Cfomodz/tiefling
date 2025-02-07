@@ -102,59 +102,35 @@ function uploadImage() {
     $file = $_FILES['file'];
     $data = ['reqtype' => 'fileupload', 'fileToUpload' => new CURLFile($file['tmp_name'], $file['type'], $file['name'])];
 
-    $ch = curl_init('https://catbox.moe/user/api.php');
-    curl_setopt($ch, CURLOPT_POST, 1);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-
-    // ssl
-    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-
-    // disable compression and keep-alive
-    curl_setopt($ch, CURLOPT_ENCODING, 'identity');
-    curl_setopt($ch, CURLOPT_FORBID_REUSE, true);
-    curl_setopt($ch, CURLOPT_FRESH_CONNECT, true);
-
-    // timeouts
-    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
-
-    // headers
-    curl_setopt($ch, CURLOPT_HTTPHEADER, [
-        'Expect:', // Disable "Expect: 100-continue"
-        'Connection: close', // Don't keep connection alive
-        'Accept: */*',
-        'Content-Type: multipart/form-data',
-        'Accept-Encoding: identity' // No compression
-    ]);
-
-    // debug stuff
-    curl_setopt($ch, CURLOPT_VERBOSE, true);
-    $verbose = fopen('php://temp', 'w+');
-    curl_setopt($ch, CURLOPT_STDERR, $verbose);
-
-    $response = curl_exec($ch);
-    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-
-    if ($response === false) {
-        rewind($verbose);
-        $verboseLog = stream_get_contents($verbose);
-
-        echo json_encode([
-            'state' => 'error',
-            'data' => sprintf(
-                "Error uploading file to catbox.\nHTTP Code: %s\ncURL Error: %s (%d)\nVerbose log: %s",
-                $httpCode,
-                curl_error($ch),
-                curl_errno($ch),
-                $verboseLog
-            )
-        ]);
-        return;
-    }
+    $response = uploadWithNative($data);
 
     echo json_encode(['state' => 'success', 'data' => $response]);
+}
+
+function uploadWithNative($file) {
+    $boundary = uniqid();
+    $content = "--$boundary\r\n";
+    $content .= "Content-Disposition: form-data; name=\"reqtype\"\r\n\r\n";
+    $content .= "fileupload\r\n";
+    $content .= "--$boundary\r\n";
+    $content .= "Content-Disposition: form-data; name=\"fileToUpload\"; filename=\"" . basename($file['name']) . "\"\r\n";
+    $content .= "Content-Type: " . $file['type'] . "\r\n\r\n";
+    $content .= file_get_contents($file['tmp_name']) . "\r\n";
+    $content .= "--$boundary--\r\n";
+
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'POST',
+            'header' => "Content-Type: multipart/form-data; boundary=$boundary\r\n",
+            'content' => $content,
+            'timeout' => 60
+        ],
+        'ssl' => [
+            'verify_peer' => true,
+            'verify_peer_name' => true
+        ]
+    ]);
+
+    $result = file_get_contents('https://catbox.moe/user/api.php', false, $context);
+    return $result;
 }
