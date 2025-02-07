@@ -100,42 +100,45 @@ function uploadImage() {
 
     // send to catbox 😺
     $file = $_FILES['file'];
-    $data = ['reqtype' => 'fileupload', 'fileToUpload' => new CURLFile($file['tmp_name'], $file['type'], $file['name'])];
+    $tmpFile = $file['tmp_name'];
 
-    $response = uploadWithNative($data);
+    $ch = curl_init('https://catbox.moe/user/api.php');
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FAILONERROR => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_POSTFIELDS => [
+            'reqtype' => 'fileupload',
+            'fileToUpload' => new CURLFile($tmpFile, $file['type'], $file['name'])
+        ]
+    ]);
 
-    echo json_encode(['state' => 'success', 'data' => $response]);
-}
+    // debug stuff
+    curl_setopt($ch, CURLOPT_VERBOSE, true);
+    $verbose = fopen('php://temp', 'w+');
+    curl_setopt($ch, CURLOPT_STDERR, $verbose);
 
-function uploadWithNative($file) {
-    try {
-        $boundary = uniqid();
-        $content = "--$boundary\r\n";
-        $content .= "Content-Disposition: form-data; name=\"reqtype\"\r\n\r\n";
-        $content .= "fileupload\r\n";
-        $content .= "--$boundary\r\n";
-        $content .= "Content-Disposition: form-data; name=\"fileToUpload\"; filename=\"" . basename($file['name']) . "\"\r\n";
-        $content .= "Content-Type: " . $file['type'] . "\r\n\r\n";
-        $content .= file_get_contents($file['tmp_name']) . "\r\n";
-        $content .= "--$boundary--\r\n";
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
 
-        $context = stream_context_create([
-            'http' => [
-                'method' => 'POST',
-                'header' => "Content-Type: multipart/form-data; boundary=$boundary\r\n",
-                'content' => $content,
-                'timeout' => 60
-            ],
-            'ssl' => [
-                'verify_peer' => true,
-                'verify_peer_name' => true
-            ]
+    if ($response === false) {
+        rewind($verbose);
+        $verboseLog = stream_get_contents($verbose);
+
+        echo json_encode([
+            'state' => 'error',
+            'data' => sprintf(
+                "Error uploading file to catbox.\nHTTP Code: %s\ncURL Error: %s (%d)\nVerbose log: %s",
+                $httpCode,
+                curl_error($ch),
+                curl_errno($ch),
+                $verboseLog
+            )
         ]);
-
-        $result = file_get_contents('https://catbox.moe/user/api.php', false, $context);
-    } catch (Exception $e) {
-        $result = $e->getMessage();
+        return;
     }
 
-    return $result;
+    echo json_encode(['state' => 'success', 'data' => $response]);
 }
