@@ -1,6 +1,4 @@
-    import * as THREE from '/js/tiefling/node_modules/three/build/three.module.js';
-
-
+import * as THREE from '/js/tiefling/node_modules/three/build/three.module.js';
 
 export const Tiefling = function(container, options = {}) {
 
