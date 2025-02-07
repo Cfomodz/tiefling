@@ -80,6 +80,12 @@ function uploadImage() {
         return;
     }
 
+    // image uploaded?
+    if (!isset($_FILES['file'])) {
+        echo json_encode(['state' => 'error', 'data' => 'No file uploaded']);
+        return;
+    }
+
     // max. 200 mb
     if ($_FILES['file']['size'] > 200 * 1024 * 1024) {
         echo json_encode(['state' => 'error', 'data' => 'File too large']);
@@ -90,12 +96,6 @@ function uploadImage() {
     $allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif'];
     if (!in_array($_FILES['file']['type'], $allowedTypes)) {
         echo json_encode(['state' => 'error', 'data' => 'Invalid file type']);
-        return;
-    }
-
-    // upload image
-    if (!isset($_FILES['file'])) {
-        echo json_encode(['state' => 'error', 'data' => 'No file uploaded']);
         return;
     }
 
