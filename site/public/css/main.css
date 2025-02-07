@@ -200,10 +200,6 @@ body {
 
         &:last-child {
             border-bottom: none;
-
-            .menu-row {
-                margin-bottom: 15px;
-            }
         }
     }
 
@@ -404,14 +400,19 @@ body {
     }
 }
 
-.about {
-    display: grid;
-    grid-template-columns: 1fr 120px;
+.menu .menu-group-about {
+    padding-top: 0;
 
-    .col.col-right {
-        text-align: right;
+    .menu-row {
+        margin-bottom: 0;
+        & > a {
+            display: inline-block;
+            padding: 15px 0 15px 0;
+        }
     }
 }
+
+
 
 .button {
     display: block;

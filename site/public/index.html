@@ -321,19 +321,20 @@
                     <a :href="bookmarkletCode" class="bookmarklet">Open in Tiefling</a>
                 </div>
             </div>
-            <div class="menu-group">
+            <div class="menu-group menu-group-about">
                 <div class="menu-row">
-                    <div class="about">
-                        <div class="col col-left">
-                            &copy; 2025 <a href="https://robsite.net">Robert Gerlach</a>
-                        </div>
-                        <div class="col col-right">
-                            <a href="https://github.com/combatwombat/tiefling">
-                                GitHub
-                            </a>
-                        </div>
+                    Made by <a href="https://robsite.net">Robert Gerlach</a> &middot;
+                    <a href="https://github.com/combatwombat/tiefling">GitHub</a> &middot;
+                    <a href="#" @click.prevent="showPrivacyPolicy = !showPrivacyPolicy">Privacy Policy</a>
+                    <div class="privacy-policy" x-show="showPrivacyPolicy">
+                        <p>This website processes all images locally in your browser. No image data is stored on our servers during normal operation.</p>
+                        <p>When using the sharing function, images are temporarily processed through our server to facilitate uploading to catbox.moe (see their <a href="https://catbox.moe/legal.php">Privacy Policy</a>. These images are not stored on our servers and are immediately forwarded.</p>
+                        <p>We use a session cookie for technical functionality. No other cookies are set, and we do not collect personal data or tracking information.</p>
+                        <p>This site includes a Ko-fi donation button. Ko-fi may set its own cookies and collect data according to their privacy policy.</p>
+                        <p>Last updated: 7 February 2025</p>
                     </div>
                 </div>
+                <!--{about-bottom}-->
             </div>
 
         </div>

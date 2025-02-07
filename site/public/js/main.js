@@ -60,6 +60,8 @@ Alpine.data('app', () => ({
     mousePosition: { x: 0, y: 0 },
     mouseDown: false,
 
+    showPrivacyPolicy: false,
+
     exampleImages: [
         {
             'key': 'jungle',
