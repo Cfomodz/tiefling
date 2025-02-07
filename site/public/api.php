@@ -109,6 +109,7 @@ function uploadImage() {
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Content-Type: multipart/form-data'
     ]);
+    curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
     curl_setopt($ch, CURLOPT_FAILONERROR, true);
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
