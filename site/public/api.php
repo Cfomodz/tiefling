@@ -100,18 +100,27 @@ function uploadImage() {
 
     // send to catbox 😺
     $file = $_FILES['file'];
-    $tmpFile = $file['tmp_name'];
-
     $ch = curl_init('https://catbox.moe/user/api.php');
+
+    $postFields = [
+        'reqtype' => 'fileupload',
+        'userhash' => '',
+        'fileToUpload' => new CURLFile(
+            $file['tmp_name'],
+            $file['type'],
+            $file['name']
+        )
+    ];
+
     curl_setopt_array($ch, [
         CURLOPT_POST => true,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FAILONERROR => true,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_POSTFIELDS => [
-            'reqtype' => 'fileupload',
-            'userhash' => '',
-            'fileToUpload' => new CURLFile($tmpFile, $file['type'], $file['name'])
+        CURLOPT_POSTFIELDS => $postFields,
+        // Explicitly set the content type
+        CURLOPT_HTTPHEADER => [
+            'Content-Type: multipart/form-data'
         ]
     ]);
 
