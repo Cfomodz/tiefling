@@ -586,7 +586,7 @@ Alpine.data('app', () => ({
     },
 
     /**
-     * upload file to api.php with action=uploadimage, file=fil and nonce=shareNince (POST)
+     * upload file to api.php
      * @param {string} fileURL - URL to file to upload (can be blob url)
      * @return {Promise<string>} - url or null
      */
