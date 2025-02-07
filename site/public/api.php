@@ -110,6 +110,7 @@ function uploadImage() {
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
         CURLOPT_POSTFIELDS => [
             'reqtype' => 'fileupload',
+            'userhash' => '',
             'fileToUpload' => new CURLFile($tmpFile, $file['type'], $file['name'])
         ]
     ]);
