@@ -38,6 +38,7 @@ Alpine.data('app', () => ({
     shareState: 'hidden', // hidden, ready, uploading, upoaded, error
     shareURL: '',
     shareNonce: '',
+    shareURLCopied: false,
 
     focus: tiefling.getFocus(),
     devicePixelRatio: tiefling.getDevicePixelRatio(),
@@ -352,6 +353,7 @@ Alpine.data('app', () => ({
 
     async loadImage() {
         this.state = "loading";
+        this.resetShare();
         try {
 
             let inputURL = '';
@@ -554,9 +556,25 @@ Alpine.data('app', () => ({
         const uploadedInputURL = await this.uploadFile(this.inputDataURL);
         const uploadedDepthmapURL = await this.uploadFile(this.depthmapDataURL);
 
-        console.log(uploadedInputURL, uploadedDepthmapURL);
-        this.shareState = 'ready';
+        if (uploadedInputURL && uploadedDepthmapURL) {
+            this.shareURL = `${window.location.origin}/?input=${encodeURIComponent(uploadedInputURL)}&depthmap=${encodeURIComponent(uploadedDepthmapURL)}&expandDepthmapRadius=${this.expandDepthmapRadius}`;
+            this.shareState = 'uploaded';
+        } else {
+            this.shareState = 'error';
+        }
 
+    },
+
+    copyShareURL() {
+        navigator.clipboard.writeText(this.shareURL).then(() => {
+            console.log('Share URL copied to clipboard');
+        }, (error) => {
+            console.error('Error copying share URL to clipboard:', error);
+        });
+        this.shareURLCopied = true;
+        setTimeout(() => {
+            this.shareURLCopied = false;
+        }, 1000);
     },
 
     resetShare() {
