@@ -52,6 +52,7 @@ header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: POST");
 header("Access-Control-Allow-Headers: Content-Type");
 
+ini_set('session.cookie_lifetime', 60 * 60 * 24 * 7); // 1 week
 
 $actions = ['getShareNonce', 'uploadImage'];
 if (isset($_POST['action']) && in_array($_POST['action'], $actions)) {
