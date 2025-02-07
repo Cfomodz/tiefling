@@ -108,29 +108,34 @@ function uploadImage() {
 }
 
 function uploadWithNative($file) {
-    $boundary = uniqid();
-    $content = "--$boundary\r\n";
-    $content .= "Content-Disposition: form-data; name=\"reqtype\"\r\n\r\n";
-    $content .= "fileupload\r\n";
-    $content .= "--$boundary\r\n";
-    $content .= "Content-Disposition: form-data; name=\"fileToUpload\"; filename=\"" . basename($file['name']) . "\"\r\n";
-    $content .= "Content-Type: " . $file['type'] . "\r\n\r\n";
-    $content .= file_get_contents($file['tmp_name']) . "\r\n";
-    $content .= "--$boundary--\r\n";
+    try {
+        $boundary = uniqid();
+        $content = "--$boundary\r\n";
+        $content .= "Content-Disposition: form-data; name=\"reqtype\"\r\n\r\n";
+        $content .= "fileupload\r\n";
+        $content .= "--$boundary\r\n";
+        $content .= "Content-Disposition: form-data; name=\"fileToUpload\"; filename=\"" . basename($file['name']) . "\"\r\n";
+        $content .= "Content-Type: " . $file['type'] . "\r\n\r\n";
+        $content .= file_get_contents($file['tmp_name']) . "\r\n";
+        $content .= "--$boundary--\r\n";
 
-    $context = stream_context_create([
-        'http' => [
-            'method' => 'POST',
-            'header' => "Content-Type: multipart/form-data; boundary=$boundary\r\n",
-            'content' => $content,
-            'timeout' => 60
-        ],
-        'ssl' => [
-            'verify_peer' => true,
-            'verify_peer_name' => true
-        ]
-    ]);
+        $context = stream_context_create([
+            'http' => [
+                'method' => 'POST',
+                'header' => "Content-Type: multipart/form-data; boundary=$boundary\r\n",
+                'content' => $content,
+                'timeout' => 60
+            ],
+            'ssl' => [
+                'verify_peer' => true,
+                'verify_peer_name' => true
+            ]
+        ]);
 
-    $result = file_get_contents('https://catbox.moe/user/api.php', false, $context);
+        $result = file_get_contents('https://catbox.moe/user/api.php', false, $context);
+    } catch (Exception $e) {
+        $result = $e->getMessage();
+    }
+
     return $result;
 }
