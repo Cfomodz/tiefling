@@ -113,17 +113,28 @@ function uploadImage() {
     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
     curl_setopt($ch, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
 
-    // timeout settings
-    curl_setopt($ch, CURLOPT_TIMEOUT, 60); // 60 seconds
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+    // timeout and retry
+    curl_setopt($ch, CURLOPT_TIMEOUT, 120); // Increase timeout to 2 minutes
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+    curl_setopt($ch, CURLOPT_TCP_KEEPALIVE, 1);
+    curl_setopt($ch, CURLOPT_TCP_KEEPIDLE, 120);
+    curl_setopt($ch, CURLOPT_TCP_KEEPINTVL, 60);
 
-    // try to prevent "Expect: 100-continue" header
+    // buffer size
+    curl_setopt($ch, CURLOPT_BUFFERSIZE, 128000); // Increase buffer size
+    curl_setopt($ch, CURLOPT_UPLOAD_BUFFERSIZE, 128000);
+
+    // try to prevent compression
+    curl_setopt($ch, CURLOPT_ENCODING, '');
+
+    // headers
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Expect:',
-        'Content-Type: multipart/form-data'
+        'Content-Type: multipart/form-data',
+        'Connection: keep-alive'
     ]);
 
-    // For debugging
+    // for debugging
     curl_setopt($ch, CURLOPT_VERBOSE, true);
     $verbose = fopen('php://temp', 'w+');
     curl_setopt($ch, CURLOPT_STDERR, $verbose);
