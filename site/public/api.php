@@ -106,25 +106,44 @@ function uploadImage() {
     curl_setopt($ch, CURLOPT_POST, 1);
     curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+
+    // ssl options
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+    curl_setopt($ch, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+
+    // timeout settings
+    curl_setopt($ch, CURLOPT_TIMEOUT, 60); // 60 seconds
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+
+    // try to prevent "Expect: 100-continue" header
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        'Expect:',
         'Content-Type: multipart/form-data'
     ]);
-    curl_setopt($ch, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-    curl_setopt($ch, CURLOPT_FAILONERROR, true);
+
+    // For debugging
+    curl_setopt($ch, CURLOPT_VERBOSE, true);
+    $verbose = fopen('php://temp', 'w+');
+    curl_setopt($ch, CURLOPT_STDERR, $verbose);
+
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
     if ($response === false) {
-        $curlError = curl_error($ch);
-        $curlErrno = curl_errno($ch);
+        rewind($verbose);
+        $verboseLog = stream_get_contents($verbose);
+
         echo json_encode([
             'state' => 'error',
             'data' => sprintf(
-                'Error uploading file to catbox. HTTP Code: %s, cURL Error: %s (%d)',
+                "Error uploading file to catbox.\nHTTP Code: %s\ncURL Error: %s (%d)\nVerbose log: %s",
                 $httpCode,
-                $curlError,
-                $curlErrno
+                curl_error($ch),
+                curl_errno($ch),
+                $verboseLog
             )
         ]);
         return;
