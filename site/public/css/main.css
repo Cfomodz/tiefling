@@ -63,6 +63,26 @@ body {
     }
 }
 
+.input {
+    display: block;
+    width: 100%;
+    height: 40px;
+    padding: 10px;
+    background: var(--color-background);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+
+    @media (max-width: 500px) {
+        font-size: 16px;
+    }
+
+    &:focus {
+        outline: none;
+        border-color: var(--color-main);
+    }
+}
+
 .controls {
     position: fixed;
     top: 0;
@@ -167,23 +187,6 @@ body {
     }
 
     & input {
-        display: block;
-        width: 100%;
-        height: 40px;
-        padding: 10px;
-        background: var(--color-background);
-        color: var(--color-text);
-        border: 1px solid var(--color-border);
-        border-radius: var(--border-radius);
-
-        @media (max-width: 500px) {
-            font-size: 16px;
-        }
-
-        &:focus {
-            outline: none;
-            border-color: var(--color-main);
-        }
 
         &[type="range"] {
             height: auto;
@@ -410,7 +413,7 @@ body {
     }
 }
 
-.button-main {
+.button {
     display: block;
     width: 100%;
     color: var(--color-light);
@@ -438,6 +441,17 @@ body {
             vertical-align: bottom;
             animation: rotate 3s linear infinite;
         }
+    }
+
+    &.button-share {
+        padding: 3px 10px 5px 10px;
+
+        & svg {
+            display: inline-block;
+            width: 16px;
+            transform: translate(3px, 3px);
+        }
+
     }
 
 }
@@ -482,5 +496,51 @@ body.hide-interface {
         display: none;
     }
     cursor: none !important;
+}
 
+.share {
+
+    .state-ready {
+        width: 100%;
+        display: grid;
+        grid-template-columns: 90px 1fr;
+        grid-gap: 5px;
+    }
+
+    .state-uploading {
+        & svg {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            vertical-align: middle;
+            animation: rotate 3s linear infinite;
+        }
+    }
+    .state-error {
+        color: red;
+    }
+    .state-uploaded {
+        display: grid;
+        grid-template-columns: 1fr 50px;
+        grid-gap: 5px;
+
+        & input {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background: var(--color-background);
+            color: var(--color-text);
+            border: 1px solid var(--color-border);
+            border-radius: var(--border-radius);
+        }
+
+        .button-copy {
+            display: grid;
+            justify-content: center;
+            align-items: center;
+            & svg {
+                width: 18px;
+            }
+        }
+    }
 }

@@ -63,6 +63,7 @@
                                id="input-image-url"
                                x-model="inputImageURL"
                                placeholder="https://..."
+                               class="input"
                         >
                         <button class="upload" id="input-image-button" title="Upload" @click="$refs.inputImageFile.click()">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12.5858L16.2426 16.8284L14.8284 18.2426L13 16.415V22H11V16.413L9.17157 18.2426L7.75736 16.8284L12 12.5858ZM12 2C15.5934 2 18.5544 4.70761 18.9541 8.19395C21.2858 8.83154 23 10.9656 23 13.5C23 16.3688 20.8036 18.7246 18.0006 18.9776L18.0009 16.9644C19.6966 16.7214 21 15.2629 21 13.5C21 11.567 19.433 10 17.5 10C17.2912 10 17.0867 10.0183 16.8887 10.054C16.9616 9.7142 17 9.36158 17 9C17 6.23858 14.7614 4 12 4C9.23858 4 7 6.23858 7 9C7 9.36158 7.03838 9.7142 7.11205 10.0533C6.91331 10.0183 6.70879 10 6.5 10C4.567 10 3 11.567 3 13.5C3 15.2003 4.21241 16.6174 5.81986 16.934L6.00005 16.9646L6.00039 18.9776C3.19696 18.7252 1 16.3692 1 13.5C1 10.9656 2.71424 8.83154 5.04648 8.19411C5.44561 4.70761 8.40661 2 12 2Z"></path></svg>
@@ -96,6 +97,7 @@
                                id="depthmap-image-url"
                                x-model="depthmapImageURL"
                                placeholder="https://..."
+                               class="input"
                         >
                         <button class="upload" id="depthmap-image-button" title="Upload" @click="$refs.depthmapImageFile.click()">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12.5858L16.2426 16.8284L14.8284 18.2426L13 16.415V22H11V16.413L9.17157 18.2426L7.75736 16.8284L12 12.5858ZM12 2C15.5934 2 18.5544 4.70761 18.9541 8.19395C21.2858 8.83154 23 10.9656 23 13.5C23 16.3688 20.8036 18.7246 18.0006 18.9776L18.0009 16.9644C19.6966 16.7214 21 15.2629 21 13.5C21 11.567 19.433 10 17.5 10C17.2912 10 17.0867 10.0183 16.8887 10.054C16.9616 9.7142 17 9.36158 17 9C17 6.23858 14.7614 4 12 4C9.23858 4 7 6.23858 7 9C7 9.36158 7.03838 9.7142 7.11205 10.0533C6.91331 10.0183 6.70879 10 6.5 10C4.567 10 3 11.567 3 13.5C3 15.2003 4.21241 16.6174 5.81986 16.934L6.00005 16.9646L6.00039 18.9776C3.19696 18.7252 1 16.3692 1 13.5C1 10.9656 2.71424 8.83154 5.04648 8.19411C5.44561 4.70761 8.40661 2 12 2Z"></path></svg>
@@ -133,7 +135,7 @@
                             </div>
                         </div>
                         <div class="col col-number">
-                            <input type="number" id="depthmap-quality-number" step="1" x-model="depthmapSize" @input="updateDepthmapSize()">
+                            <input type="number" class="input" id="depthmap-quality-number" step="1" x-model="depthmapSize" @input="updateDepthmapSize()">
                         </div>
                     </div>
                 </div>
@@ -150,12 +152,12 @@
                            </div>
                        </div>
                        <div class="col col-number">
-                           <input type="number" id="expandDepthmapRadius-number" min="1" max="20" step="1" x-model="expandDepthmapRadius" @input="updateExpandDepthmapRadius()">
+                           <input type="number" class="input" id="expandDepthmapRadius-number" min="1" max="20" step="1" x-model="expandDepthmapRadius" @input="updateExpandDepthmapRadius()">
                        </div>
                     </div>
                 </div>
                 <div class="menu-row">
-                    <button class="button-main states" @click="loadImage()" :disabled="state == 'loading'">
+                    <button class="button states" @click="loadImage()" :disabled="state == 'loading'">
                         <span class="state state-idle" x-show="state == 'idle' || state == 'error'">Load Image</span>
                         <span class="state state-loading" x-show="state == 'loading'">
                             <span>Loading</span>
@@ -164,6 +166,30 @@
                             </span>
                         </span>
                     </button>
+                </div>
+                <div class="menu-row share" x-show="depthmapDataURL && inputDataURL && shareNonce">
+                    <div class="state-ready" x-show="shareState === 'ready'">
+                        <button class="button button-share" @click="onShare()">
+                            <span>Share</span>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12.5858L16.2426 16.8284L14.8284 18.2426L13 16.415V22H11V16.413L9.17157 18.2426L7.75736 16.8284L12 12.5858ZM12 2C15.5934 2 18.5544 4.70761 18.9541 8.19395C21.2858 8.83154 23 10.9656 23 13.5C23 16.3688 20.8036 18.7246 18.0006 18.9776L18.0009 16.9644C19.6966 16.7214 21 15.2629 21 13.5C21 11.567 19.433 10 17.5 10C17.2912 10 17.0867 10.0183 16.8887 10.054C16.9616 9.7142 17 9.36158 17 9C17 6.23858 14.7614 4 12 4C9.23858 4 7 6.23858 7 9C7 9.36158 7.03838 9.7142 7.11205 10.0533C6.91331 10.0183 6.70879 10 6.5 10C4.567 10 3 11.567 3 13.5C3 15.2003 4.21241 16.6174 5.81986 16.934L6.00005 16.9646L6.00039 18.9776C3.19696 18.7252 1 16.3692 1 13.5C1 10.9656 2.71424 8.83154 5.04648 8.19411C5.44561 4.70761 8.40661 2 12 2Z"></path></svg>
+                        </button>
+                        <div class="info">
+                            Uploads images to <a href="https://catbox.moe" target="_blank">catbox.moe</a> via tiefling.loc and generates a shareable link.
+                        </div>
+                    </div>
+                    <div class="state-uploading" x-show="shareState === 'uploading'">
+                        <span>Uploading</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C12.5523 2 13 2.44772 13 3V6C13 6.55228 12.5523 7 12 7C11.4477 7 11 6.55228 11 6V3C11 2.44772 11.4477 2 12 2ZM12 17C12.5523 17 13 17.4477 13 18V21C13 21.5523 12.5523 22 12 22C11.4477 22 11 21.5523 11 21V18C11 17.4477 11.4477 17 12 17ZM22 12C22 12.5523 21.5523 13 21 13H18C17.4477 13 17 12.5523 17 12C17 11.4477 17.4477 11 18 11H21C21.5523 11 22 11.4477 22 12ZM7 12C7 12.5523 6.55228 13 6 13H3C2.44772 13 2 12.5523 2 12C2 11.4477 2.44772 11 3 11H6C6.55228 11 7 11.4477 7 12ZM19.0711 19.0711C18.6805 19.4616 18.0474 19.4616 17.6569 19.0711L15.5355 16.9497C15.145 16.5592 15.145 15.9261 15.5355 15.5355C15.9261 15.145 16.5592 15.145 16.9497 15.5355L19.0711 17.6569C19.4616 18.0474 19.4616 18.6805 19.0711 19.0711ZM8.46447 8.46447C8.07394 8.85499 7.44078 8.85499 7.05025 8.46447L4.92893 6.34315C4.53841 5.95262 4.53841 5.31946 4.92893 4.92893C5.31946 4.53841 5.95262 4.53841 6.34315 4.92893L8.46447 7.05025C8.85499 7.44078 8.85499 8.07394 8.46447 8.46447ZM4.92893 19.0711C4.53841 18.6805 4.53841 18.0474 4.92893 17.6569L7.05025 15.5355C7.44078 15.145 8.07394 15.145 8.46447 15.5355C8.85499 15.9261 8.85499 16.5592 8.46447 16.9497L6.34315 19.0711C5.95262 19.4616 5.31946 19.4616 4.92893 19.0711ZM15.5355 8.46447C15.145 8.07394 15.145 7.44078 15.5355 7.05025L17.6569 4.92893C18.0474 4.53841 18.6805 4.53841 19.0711 4.92893C19.4616 5.31946 19.4616 5.95262 19.0711 6.34315L16.9497 8.46447C16.5592 8.85499 15.9261 8.85499 15.5355 8.46447Z"></path></svg>
+                    </div>
+                    <div class="state-error" x-show="shareState === 'error'">
+                        <span>Error Uploading :&lt;</span>
+                    </div>
+                    <div class="state-uploaded" x-show="shareState === 'uploaded'">
+                        <input class="input" type="text" x-model="shareURL" readonly>
+                        <button class="button button-copy" @click="copyShareURL()">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M6.9998 6V3C6.9998 2.44772 7.44752 2 7.9998 2H19.9998C20.5521 2 20.9998 2.44772 20.9998 3V17C20.9998 17.5523 20.5521 18 19.9998 18H16.9998V20.9991C16.9998 21.5519 16.5499 22 15.993 22H4.00666C3.45059 22 3 21.5554 3 20.9991L3.0026 7.00087C3.0027 6.44811 3.45264 6 4.00942 6H6.9998ZM5.00242 8L5.00019 20H14.9998V8H5.00242ZM8.9998 6H16.9998V16H18.9998V4H8.9998V6Z"></path></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
             <div class="menu-group">
@@ -185,7 +211,7 @@
                             </div>
                         </div>
                         <div class="col col-number">
-                            <input type="number" id="focus-number" step="0.01" x-model="focus" @input="updateFocus()">
+                            <input type="number" class="input" id="focus-number" step="0.01" x-model="focus" @input="updateFocus()">
                         </div>
                     </div>
                 </div>
@@ -225,7 +251,7 @@
                             </div>
                         </div>
                         <div class="col col-number">
-                            <input type="number" id="devicePixelRatio-number" min="0.1" max="4" step="0.1" x-model="devicePixelRatio" @input="updateDevicePixelRatio()">
+                            <input type="number" class="input" id="devicePixelRatio-number" min="0.1" max="4" step="0.1" x-model="devicePixelRatio" @input="updateDevicePixelRatio()">
                         </div>
                     </div>
                 </div>
@@ -262,7 +288,7 @@
                             </div>
                         </div>
                         <div class="col col-number">
-                            <input type="number" id="mouseXOffset-number" :min="mouseXOffsetMin" step="0.001" x-model="mouseXOffset" @input="updateMouseXOffset()">
+                            <input type="number" class="input" id="mouseXOffset-number" :min="mouseXOffsetMin" step="0.001" x-model="mouseXOffset" @input="updateMouseXOffset()">
                         </div>
                     </div>
                 </div>

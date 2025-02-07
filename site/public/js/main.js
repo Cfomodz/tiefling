@@ -35,6 +35,10 @@ Alpine.data('app', () => ({
     depthmapDataURL: '', // URL to loaded image
     depthmapSize: tiefling.getDepthmapSize(),
 
+    shareState: 'hidden', // hidden, ready, uploading, upoaded, error
+    shareURL: '',
+    shareNonce: '',
+
     focus: tiefling.getFocus(),
     devicePixelRatio: tiefling.getDevicePixelRatio(),
     expandDepthmapRadius: tiefling.getExpandDepthmapRadius(),
@@ -201,7 +205,6 @@ Alpine.data('app', () => ({
         this.updateExpandDepthmapRadius();
         this.updateIdleMovementEnabled();
 
-
         // click anywhere outside .menu or.toggle-menu: set menuVisible to false
         document.addEventListener('click', (event) => {
             if (this.menuVisible && !event.target.closest('.menu') && !event.target.closest('.toggle-menu')) {
@@ -215,6 +218,14 @@ Alpine.data('app', () => ({
                 document.body.classList.toggle('hide-interface');
             }
         });
+
+        // get nonce for sharing
+        try {
+            await this.getShareNonce();
+            this.shareState = 'ready';
+        } catch (error) {
+            console.error('Error getting share nonce:', error);
+        }
 
     },
 
@@ -508,6 +519,84 @@ Alpine.data('app', () => ({
 
     removeInputImage() {
         this.inputImage = this.inputImageFile = this.inputImageURL = this.inputDataURL = null;
+    },
+
+
+    // get nonce from api.php for sharing. POST request, send form data
+    async getShareNonce() {
+        try {
+            const response = await fetch('/api.php', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    'action': 'getShareNonce'
+                })
+            });
+
+            const data = await response.json();
+            if (data.state === 'success') {
+                this.shareNonce = data.data;
+            } else {
+                throw new Error('Error getting nonce: ' + data.data);
+            }
+
+        } catch (error) {
+            throw new Error('Error getting nonce: ' + error);
+        }
+
+    },
+
+    async onShare() {
+
+        if (!this.shareNonce) return;
+
+        this.shareState = 'uploading';
+
+        const uploadedInputURL = await this.uploadFile(this.inputDataURL);
+        const uploadedDepthmapURL = await this.uploadFile(this.depthmapDataURL);
+
+        console.log(uploadedInputURL, uploadedDepthmapURL);
+        this.shareState = 'ready';
+
+    },
+
+    resetShare() {
+        this.shareState = 'ready';
+        this.shareURL = '';
+    },
+
+    /**
+     * upload file to api.php with action=uploadimage, file=fil and nonce=shareNince (POST)
+     * @param {string} fileURL - URL to file to upload (can be blob url)
+     * @return {Promise<string>} - url or null
+     */
+    async uploadFile(fileURL) {
+        if (!fileURL) return null;
+
+        const file = await fetch(fileURL).then(response => response.blob());
+        const data = new FormData();
+        data.append('action', 'uploadImage');
+        data.append('file', file);
+        data.append('shareNonce', this.shareNonce);
+
+        try {
+            const response = await fetch('/api.php', {
+                method: 'POST',
+                body: data
+            });
+
+            const responseData = await response.json();
+            if (responseData.state === 'success') {
+                return responseData.data;
+            } else {
+                console.error('Error uploading file:', responseData.data);
+                return null;
+            }
+
+        } catch (error) {
+            console.error('Error uploading file:', error);
+            return null;
+        }
+
     },
 
 
