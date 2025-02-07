@@ -45,7 +45,9 @@ You can also drag the VR cursor from left to right on the whole image to adjust 
 
 ## Hosting
 
-It's a static website, all the 3D generation happens in your browser. So, host the contents of the `public` folder yourself however you like. But give it its own domain, it's not tested to work in subfolders yet.
+It's (mostly) a static website, all the 3D generation happens in your browser. So, host the contents of the `public` folder yourself however you like. But give it its own domain, it's not tested to work in subfolders yet.
+
+Also there is an api.php that acts as a proxy for the catbox.moe API. Ignore it if you don't use this feature, otherwise install PHP 8+.
 
 ## Thanks to
 
