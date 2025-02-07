@@ -4,13 +4,13 @@
 
 $allowedOrigin = 'https://tiefling.loc'; // change to your domain
 
-// make pretty sure the request comes from the app
 ini_set('session.cookie_httponly', 1);
 ini_set('session.cookie_secure', 1);
 ini_set('session.cookie_samesite', 'Strict');
 
 session_start();
 
+// make (pretty) sure the request comes from the app
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 if ($origin !== $allowedOrigin) {
     http_response_code(403);
