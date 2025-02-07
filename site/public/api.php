@@ -100,27 +100,36 @@ function uploadImage() {
 
     // send to catbox 😺
     $file = $_FILES['file'];
+    $boundary = '-------------' . uniqid();
+
+    $body = '';
+    // Add reqtype field
+    $body .= "--$boundary\r\n";
+    $body .= "Content-Disposition: form-data; name=\"reqtype\"\r\n\r\n";
+    $body .= "fileupload\r\n";
+
+    // Add userhash field
+    $body .= "--$boundary\r\n";
+    $body .= "Content-Disposition: form-data; name=\"userhash\"\r\n\r\n";
+    $body .= "\r\n";
+
+    // Add file
+    $body .= "--$boundary\r\n";
+    $body .= "Content-Disposition: form-data; name=\"fileToUpload\"; filename=\"{$file['name']}\"\r\n";
+    $body .= "Content-Type: {$file['type']}\r\n\r\n";
+    $body .= file_get_contents($file['tmp_name']) . "\r\n";
+    $body .= "--$boundary--\r\n";
+
     $ch = curl_init('https://catbox.moe/user/api.php');
-
-    $postFields = [
-        'reqtype' => 'fileupload',
-        'userhash' => '',
-        'fileToUpload' => new CURLFile(
-            $file['tmp_name'],
-            $file['type'],
-            $file['name']
-        )
-    ];
-
     curl_setopt_array($ch, [
         CURLOPT_POST => true,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FAILONERROR => true,
         CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_POSTFIELDS => $postFields,
-        // Explicitly set the content type
+        CURLOPT_POSTFIELDS => $body,
         CURLOPT_HTTPHEADER => [
-            'Content-Type: multipart/form-data'
+            "Content-Type: multipart/form-data; boundary=$boundary",
+            'Content-Length: ' . strlen($body)
         ]
     ]);
 
