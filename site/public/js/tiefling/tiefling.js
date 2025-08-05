@@ -638,7 +638,7 @@ export const TieflingView = function (container, image, depthMap, options) {
                                 vec2(-1.0, 1.0);
                         
                             // Calculate edge proximity factor (0 at edges, 1 in center)
-                            float edgeWidth = 0.01; // controls edge stiffness
+                            float edgeWidth = 0.02; // controls edge stiffness
                             vec2 edgeFactorVec = smoothstep(0.0, edgeWidth, vUv) * 
                                                 smoothstep(1.0, 1.0 - edgeWidth, vUv);
                             float edgeFactor = edgeFactorVec.x * edgeFactorVec.y;
@@ -750,7 +750,7 @@ export const TieflingView = function (container, image, depthMap, options) {
                 console.error('Invalid depthmap access at:', x, y);
                 depthValue = 0;
             } else {
-                depthValue = depthData.data[pixelIndex] / 255;
+                depthValue = 1 * depthData.data[pixelIndex] / 255;
             }
 
             const z = depthValue * meshDepth;
