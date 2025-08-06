@@ -217,6 +217,20 @@
                     </div>
                 </div>
                 <div class="menu-row">
+                    <label for="baseMouseSensitivity">Movement Range</label>
+                    <div class="input-range-number">
+                        <div class="col col-range">
+                            <input type="range" id="baseMouseSensitivity" min="0" max="2" step="0.01" x-model="baseMouseSensitivity" @input="updateBaseMouseSensitivity()" list="baseMouseSensitivityList">
+                            <datalist id="baseMouseSensitivityList">
+                                <option value="0.5">
+                            </datalist>
+                        </div>
+                        <div class="col col-number">
+                            <input type="number" class="input" id="baseMouseSensitivity-number" step="0.01" x-model="baseMouseSensitivity" @input="updateBaseMouseSensitivity()">
+                        </div>
+                    </div>
+                </div>
+                <div class="menu-row">
                     <div class="input-checkbox">
                         <input type="checkbox" id="idleMovementEnabled" x-model="idleMovementEnabled" @change="updateIdleMovementEnabled()">
                         <label for="idleMovementEnabled">Move Camera when Idle</label>

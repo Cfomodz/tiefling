@@ -15,6 +15,7 @@ export const Tiefling = function(container, options = {}) {
     this.depthmapSize = options.depthmapSize || 1024;
 
     this.focus = options.focus ?? 0.25;
+    this.baseMouseSensitivity = options.baseMouseSensitivity || 0.5;
     this.devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
     this.expandDepthmapRadius = options.expandDepthmapRadius ?? 7;
     this.mouseXOffset = options.mouseXOffset ?? 0.2;
@@ -55,6 +56,7 @@ export const Tiefling = function(container, options = {}) {
 
             view1 = TieflingView(container.querySelector('.inner .container-left'), image, depthMap, {
                 focus: this.focus,
+                baseMouseSensitivity: this.baseMouseSensitivity,
                 devicePixelRatio: this.devicePixelRatio,
                 expandDepthmapRadius: this.expandDepthmapRadius,
             });
@@ -65,6 +67,7 @@ export const Tiefling = function(container, options = {}) {
             view2 = TieflingView(container.querySelector('.inner .container-right'), image, depthMap, {
                 mouseXOffset: -this.mouseXOffset,
                 focus: this.focus,
+                baseMouseSensitivity: this.baseMouseSensitivity,
                 devicePixelRatio: this.devicePixelRatio,
                 expandDepthmapRadius: this.expandDepthmapRadius,
             });
@@ -72,6 +75,7 @@ export const Tiefling = function(container, options = {}) {
             view1 = TieflingView(container.querySelector('.inner .container-left'), image, depthMap, {
                 mouseXOffset: 0,
                 focus: this.focus,
+                baseMouseSensitivity: this.baseMouseSensitivity,
                 devicePixelRatio: this.devicePixelRatio,
                 expandDepthmapRadius: this.expandDepthmapRadius,
             });
@@ -299,6 +303,20 @@ export const Tiefling = function(container, options = {}) {
             }
         },
 
+        getBaseMouseSensitivity: () => {
+            return this.baseMouseSensitivity;
+        },
+        setBaseMouseSensitivity: (value) => {
+            this.baseMouseSensitivity = value;
+
+            if (view1) {
+                view1.setBaseMouseSensitivity(this.baseMouseSensitivity);
+            }
+            if (view2) {
+                view2.setBaseMouseSensitivity(this.baseMouseSensitivity);
+            }
+        },
+
         getDevicePixelRatio: () => {
             return this.devicePixelRatio
         },
@@ -522,7 +540,7 @@ export const TieflingView = function (container, image, depthMap, options) {
     let mouseXOffset = options.mouseXOffset ?? 0;
 
     let focus = options.focus ?? 0.25;
-    let baseMouseSensitivity = options.mouseSensitivity || 0.5;
+    let baseMouseSensitivity = options.baseMouseSensitivity || 0.5;
     let mouseSensitivityX = baseMouseSensitivity;
     let mouseSensitivityY = baseMouseSensitivity;
     let devicePixelRatio = options.devicePixelRatio || Math.min(window.devicePixelRatio, 2) || 1;
@@ -1214,6 +1232,10 @@ export const TieflingView = function (container, image, depthMap, options) {
 
         setFocus: function(value) {
             focus = value;
+        },
+        setBaseMouseSensitivity: function(value) {
+            baseMouseSensitivity = value;
+            updateMouseSensitivity();
         },
         setDevicePixelRatio: function(value) {
             devicePixelRatio = value;

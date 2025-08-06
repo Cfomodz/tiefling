@@ -41,6 +41,7 @@ Alpine.data('app', () => ({
     shareURLCopied: false,
 
     focus: tiefling.getFocus(),
+    baseMouseSensitivity: tiefling.getBaseMouseSensitivity(),
     devicePixelRatio: tiefling.getDevicePixelRatio(),
     expandDepthmapRadius: tiefling.getExpandDepthmapRadius(),
     mouseXOffset: 0.04, // for hsbs, fsbs and anaglyph modes. 0 = no 3d, 0.04 is a good default
@@ -204,6 +205,7 @@ Alpine.data('app', () => ({
 
         this.updateDepthmapSize();
         this.updateFocus();
+        this.updateBaseMouseSensitivity();
         this.updateDevicePixelRatio();
         this.updateExpandDepthmapRadius();
         this.updateIdleMovementEnabled();
@@ -257,6 +259,7 @@ Alpine.data('app', () => ({
     loadSettings() {
         this.depthmapSize = parseInt(localStorage.getItem('depthmapSize')) || this.depthmapSize;
         this.focus = localStorage.getItem('focus') ? parseFloat(localStorage.getItem('focus')) : this.focus;
+        this.baseMouseSensitivity = parseFloat(localStorage.getItem('baseMouseSensitivity')) || this.baseMouseSensitivity;
         this.devicePixelRatio = parseFloat(localStorage.getItem('devicePixelRatio')) || this.devicePixelRatio;
         this.expandDepthmapRadius = localStorage.getItem('expandDepthmapRadius') ? parseInt(localStorage.getItem('expandDepthmapRadius')) : this.expandDepthmapRadius;
         this.idleMovementEnabled = localStorage.getItem('idleMovementEnabled') !== 'false';
@@ -635,6 +638,11 @@ Alpine.data('app', () => ({
     updateFocus() {
         tiefling.setFocus(this.focus);
         localStorage.setItem('focus', this.focus);
+    },
+
+    updateBaseMouseSensitivity() {
+        tiefling.setBaseMouseSensitivity(this.baseMouseSensitivity);
+        localStorage.setItem('baseMouseSensitivity', this.baseMouseSensitivity);
     },
 
     updateDepthmapSize() {
