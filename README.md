@@ -16,7 +16,7 @@ https://github.com/user-attachments/assets/8df87945-a159-4fad-b566-82d7943b2991
 - Load an image via the menu (enter URL, upload a file or drag&drop one on the field). Optionally load your own depth map. If none is provided, it is generated.
 - Use URL parameters: 
   - `?input={urlencoded url of image}` - Load image, generate depth map. Supports all formats the browser supports. In addition to `input`:
-    - `&depthmap={urlencoded url of depth map image}` - Bring your own depth map.
+    - `&depthmap={urlencoded url of depth map image}` - Bring your own depth map. In grayscale (light = near, dark = far) or [Turbo Rainbow format](https://research.google/blog/turbo-an-improved-rainbow-colormap-for-visualization/) like its used by Apples [depth-pro](https://github.com/apple/ml-depth-pro)
     - `&expandDepthmapRadius=5` - Set the Depth Map Expansion to tweak background separation during rendering
     - `&depthmapSize=1024` - Sets Max. Depth Map Size, only used for depth map generation.
     - `&displayMode={full|hsbs|fsbs} - Display one image in full, or two side-by-side for VR
