@@ -290,7 +290,7 @@ Alpine.data('app', () => ({
     // create bookmarklet for current domain
     createBookmarklet(sourceCode) {
         // replace ---URL_PREFIX--- with current protocol, domain, port and path
-        const urlPrefix = window.location.origin;
+        const urlPrefix = window.location.origin; // 'https://test.loc/gallery/tiefling-loader.php';
 
         let code = sourceCode
             .replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '') // Remove comments

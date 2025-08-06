@@ -581,9 +581,9 @@ export const TieflingView = function (container, image, depthMap, options) {
         return (colorPixels / sampleSize) > 0.3;
     }
 
-    // Turbo colormap data from the official Google/matplotlib implementation
-    // Based on the exact data from https://github.com/exogen/turbo-colormap
-    const turboColormapFloat = [
+    // Turbo-to-grayscale conversion using exogen/turbo-colormap approach
+    // Based on https://github.com/exogen/turbo-colormap
+    const turboColormapFloat = new Float32Array([
         0.18995, 0.07176, 0.23217, 0.19483, 0.08339, 0.26149, 0.19956, 0.09498,
         0.29024, 0.20415, 0.10652, 0.31844, 0.2086, 0.11802, 0.34607, 0.21291,
         0.12947, 0.37314, 0.21708, 0.14087, 0.39964, 0.22111, 0.15223, 0.42558, 0.225,
@@ -678,35 +678,37 @@ export const TieflingView = function (container, image, depthMap, options) {
         0.00579, 0.54583, 0.03593, 0.00638, 0.53295, 0.03169, 0.00705, 0.51989,
         0.02756, 0.0078, 0.50664, 0.02354, 0.00863, 0.49321, 0.01963, 0.00955, 0.4796,
         0.01583, 0.01055
-    ];
-    
+    ]);
+
     // Convert float array to RGB lookup table
-    const turboColormap = [];
+    const rgbColormap = new Array(256);
     for (let i = 0; i < 256; i++) {
         const flatIndex = i * 3;
-        const r = Math.round(turboColormapFloat[flatIndex] * 255);
-        const g = Math.round(turboColormapFloat[flatIndex + 1] * 255);
-        const b = Math.round(turboColormapFloat[flatIndex + 2] * 255);
-        turboColormap.push([r, g, b]);
+        const r = Math.floor(turboColormapFloat[flatIndex] * 255);
+        const g = Math.floor(turboColormapFloat[flatIndex + 1] * 255);
+        const b = Math.floor(turboColormapFloat[flatIndex + 2] * 255);
+        rgbColormap[i] = [r, g, b];
     }
 
-    // Helper function to reverse turbo colormap (Apple Depth Pro format)
-    function reverseTurboColormap(r, g, b) {
-        // Convert 0-1 range to 0-255
-        const rInt = Math.round(r * 255);
-        const gInt = Math.round(g * 255);
-        const bInt = Math.round(b * 255);
-        
-        // Find closest turbo colormap entry using simple Euclidean distance
-        let bestIndex = 0;
+    // Simple brute-force nearest neighbor search (since we can't use k-d tree in browser without import)
+    const turboColorCache = new Map();
+
+    function snapColorToIntensity(rgbColor, cache = turboColorCache) {
+        const cacheKey = `${rgbColor[0]},${rgbColor[1]},${rgbColor[2]}`;
+        const cachedValue = cache.get(cacheKey);
+        if (cachedValue != null) {
+            return cachedValue;
+        }
+
         let bestDistance = Infinity;
+        let bestIndex = 0;
         
-        for (let i = 0; i < turboColormap.length; i++) {
-            const [tr, tg, tb] = turboColormap[i];
+        for (let i = 0; i < rgbColormap.length; i++) {
+            const [tr, tg, tb] = rgbColormap[i];
             const distance = Math.sqrt(
-                (rInt - tr) ** 2 + 
-                (gInt - tg) ** 2 + 
-                (bInt - tb) ** 2
+                (rgbColor[0] - tr) ** 2 + 
+                (rgbColor[1] - tg) ** 2 + 
+                (rgbColor[2] - tb) ** 2
             );
             
             if (distance < bestDistance) {
@@ -714,12 +716,9 @@ export const TieflingView = function (container, image, depthMap, options) {
                 bestIndex = i;
             }
         }
-        
-        // Return normalized depth value (0-1)
-        // The turbo colormap index corresponds to inverse depth visualization
-        // Blue (index 0) = far, Red (index 255) = near
-        // Since Tiefling expects higher values = nearer, we return the index/255 directly
-        return bestIndex / 255;
+
+        cache.set(cacheKey, bestIndex);
+        return bestIndex;
     }
 
     init();
@@ -770,19 +769,29 @@ export const TieflingView = function (container, image, depthMap, options) {
                 // Check if this is a color depth map (e.g., from Apple Depth Pro)
                 isColorDepth = isColorDepthMap(depthData);
                 if (isColorDepth) {
-                    console.log('Detected color depth map, will extract depth from RGB values...');
+                    console.log('Detected color depth map, converting to grayscale using turbo-colormap approach...');
                     
-                    // Debug: Sample a few pixels to see the conversion
-                    for (let debugIdx = 0; debugIdx < 5; debugIdx++) {
-                        const idx = debugIdx * 1000 * 4;
-                        if (idx + 2 < depthData.data.length) {
-                            const r = depthData.data[idx] / 255;
-                            const g = depthData.data[idx + 1] / 255;
-                            const b = depthData.data[idx + 2] / 255;
-                            const depth = reverseTurboColormap(r, g, b);
-                            console.log(`Sample ${debugIdx}: RGB(${(r*255).toFixed(0)},${(g*255).toFixed(0)},${(b*255).toFixed(0)}) -> depth: ${depth.toFixed(3)}`);
-                        }
+                    // Convert the entire color depth map to grayscale immediately
+                    const grayscaleData = new ImageData(depthData.width, depthData.height);
+                    
+                    for (let i = 0; i < depthData.data.length; i += 4) {
+                        const r = depthData.data[i];
+                        const g = depthData.data[i + 1];
+                        const b = depthData.data[i + 2];
+                        
+                        // Convert turbo color to grayscale intensity
+                        const grayValue = snapColorToIntensity([r, g, b]);
+                        
+                        grayscaleData.data[i] = grayValue;     // R
+                        grayscaleData.data[i + 1] = grayValue; // G
+                        grayscaleData.data[i + 2] = grayValue; // B
+                        grayscaleData.data[i + 3] = 255;       // A
                     }
+                    
+                    // Replace the color depth data with grayscale
+                    depthData = grayscaleData;
+                    isColorDepth = false; // Now it's grayscale, treat it normally
+                    console.log('Color depth map converted to grayscale successfully');
                 }
 
                 // Expand depth map to fill in gaps
@@ -793,8 +802,7 @@ export const TieflingView = function (container, image, depthMap, options) {
                 const geometry = createGeometry(
                     Math.min(meshResolution, img.width),
                     Math.min(meshResolution, img.height),
-                    depthData,
-                    isColorDepth
+                    depthData
                 );
 
                 material = new THREE.ShaderMaterial({
@@ -905,7 +913,8 @@ export const TieflingView = function (container, image, depthMap, options) {
         return new ImageData(dst, width, height);
     }
 
-    function createGeometry(width, height, depthData, isColorDepth = false) {
+
+    function createGeometry(width, height, depthData) {
         const imageAspect = depthData.width / depthData.height;
         const geometry = new THREE.PlaneGeometry(
             imageAspect,
@@ -935,16 +944,8 @@ export const TieflingView = function (container, image, depthMap, options) {
                 console.error('Invalid depthmap access at:', x, y);
                 depthValue = 0;
             } else {
-                if (isColorDepth) {
-                    // Extract depth from color depth map (e.g., Apple Depth Pro turbo colormap)
-                    const r = depthData.data[pixelIndex] / 255;
-                    const g = depthData.data[pixelIndex + 1] / 255;
-                    const b = depthData.data[pixelIndex + 2] / 255;
-                    depthValue = reverseTurboColormap(r, g, b);
-                } else {
-                    // Standard grayscale depth map
-                    depthValue = 1 * depthData.data[pixelIndex] / 255;
-                }
+                // All depth maps are now grayscale (converted on load if needed)
+                depthValue = depthData.data[pixelIndex] / 255;
             }
 
             const z = depthValue * meshDepth;
@@ -1116,55 +1117,55 @@ export const TieflingView = function (container, image, depthMap, options) {
 
 
     // public methods
-    // Debug function: Convert color depth map to grayscale and open in new tab
+    // Debug function: Test turbo color conversion
+    window.debugTurboConversion = function() {
+        console.log('Testing turbo color conversion:');
+        
+        // Test boundary colors
+        const turboBlue = rgbColormap[0];   // Index 0 = far (blue)
+        const turboRed = rgbColormap[255];  // Index 255 = near (red)
+        
+        const blueIntensity = snapColorToIntensity(turboBlue);
+        console.log(`Turbo blue RGB(${turboBlue.join(',')}) -> intensity: ${blueIntensity} (should be 0)`);
+        
+        const redIntensity = snapColorToIntensity(turboRed);
+        console.log(`Turbo red RGB(${turboRed.join(',')}) -> intensity: ${redIntensity} (should be 255)`);
+        
+        // Test some sample colors
+        const darkRed = snapColorToIntensity([185, 30, 0]);
+        console.log(`Dark red RGB(185,30,0) -> intensity: ${darkRed} (should be high ~255)`);
+        
+        const blueColor = snapColorToIntensity([67, 72, 176]);
+        console.log(`Blue RGB(67,72,176) -> intensity: ${blueColor} (should be low ~0)`);
+        
+        // Test middle range
+        const turboMid = rgbColormap[127];
+        const midIntensity = snapColorToIntensity(turboMid);
+        console.log(`Turbo mid RGB(${turboMid.join(',')}) -> intensity: ${midIntensity} (should be ~127)`);
+    };
+
+    // Debug function: Show current depth map in new tab (already converted to grayscale if needed)
     window.debugColorToGrayscale = function() {
         if (!depthData) {
             console.log('No depth data loaded');
             return;
         }
         
-        console.log('Converting color depth map to grayscale...');
+        console.log('Opening current depth map in new tab (already converted to grayscale if it was color)...');
         
         const canvas = document.createElement('canvas');
         canvas.width = depthData.width;
         canvas.height = depthData.height;
         const ctx = canvas.getContext('2d');
         
-        const grayscaleData = new ImageData(depthData.width, depthData.height);
-        
-        // Cache the color detection result to avoid recalculating for every pixel
-        const isColor = isColorDepthMap(depthData);
-        console.log('Is color depth map:', isColor);
-        
-        for (let i = 0; i < depthData.data.length; i += 4) {
-            const r = depthData.data[i] / 255;
-            const g = depthData.data[i + 1] / 255;
-            const b = depthData.data[i + 2] / 255;
-            
-            let grayValue;
-            if (isColor) {
-                // Convert color to depth, then to grayscale
-                const depth = reverseTurboColormap(r, g, b);
-                grayValue = Math.round(depth * 255);
-            } else {
-                // Already grayscale
-                grayValue = depthData.data[i];
-            }
-            
-            grayscaleData.data[i] = grayValue;     // R
-            grayscaleData.data[i + 1] = grayValue; // G
-            grayscaleData.data[i + 2] = grayValue; // B
-            grayscaleData.data[i + 3] = 255;       // A
-        }
-        
-        console.log('Conversion complete, opening in new tab...');
-        ctx.putImageData(grayscaleData, 0, 0);
+        // Put the current depth data (already grayscale) on canvas
+        ctx.putImageData(depthData, 0, 0);
         
         // Open in new tab
         canvas.toBlob(blob => {
             const url = URL.createObjectURL(blob);
             window.open(url, '_blank');
-            console.log('Opened converted grayscale depth map in new tab');
+            console.log('Opened depth map in new tab');
         });
     };
 

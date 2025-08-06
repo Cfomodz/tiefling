@@ -1,7 +1,7 @@
 // Source for bookmarklet. Create actual bookmarklet with createBookmarklet in main.js or some online bookmarklet creator.
 // Detect images from various websites, send them to https://tiefling.gerlach.dev?input={imageURL}
 // Only works for sites that don't have a restrictive CORS policy
-// ---URL_PREFIX--- is replaced with the actual URL in createBookmarlet in main.js
+// ---URL_PREFIX--- is replaced with the actual URL in createBookmarklet in main.js
 (function() {
 
     const domain = window.location.hostname;
@@ -19,12 +19,12 @@
 
         // are we on https://civitai.com/images/{number}?
         if (domain === 'civitai.com' && urlPath.startsWith('/images/')) {
-            return document.querySelector('.mantine-Carousel-slide img.max-h-full').src;
+            return document.querySelector('.transform-3d img.max-h-full').src;
         }
 
         // unsplash
         if (domain === 'unsplash.com') {
-            return document.querySelector('dialog button div img[srcset]').src;
+            return document.querySelector('[data-testid="photos-route"] div div div div button img[srcset]').src;
         }
 
         // on some mastodon instance with an opened image?
