@@ -1,67 +1,266 @@
-# &rarr; [tiefling.app](https://tiefling.app)
+# Parallax Studio Pro
 
-# 2D-to-3D parallax image converter and (VR-)viewer
+A complete backend API system for converting 2D images into cinematic 3D parallax videos with professional audio mixing.
 
-Generates a depth map with DepthAnythingV2, then renders a 3D parallax view of the image to simulate depth. 
+## Overview
 
-Runs locally and privately in your browser.  
+Parallax Studio Pro transforms static images into dynamic parallax animations that simulate 3D depth and camera movement, similar to Facebook's 3D Photo feature but for video production. The system provides a full pipeline from image processing to final video output with synchronized audio.
 
-Needs a beefy computer for higher depth map sizes (1024 takes about 20s on an M1 Pro, use ~600 on fast smartphones). 
+## Architecture
 
-https://github.com/user-attachments/assets/8df87945-a159-4fad-b566-82d7943b2991
+The system consists of four microservices working together:
 
-## Loading images
+```
+Images → Depth Maps → Parallax Videos → Multi-Scene Composition → Audio Mixing → Final Production
+```
 
-- Drag &amp; Drop an image anywhere
-- Load an image via the menu (enter URL, upload a file or drag&drop one on the field). Optionally load your own depth map. If none is provided, it is generated.
-- Use URL parameters: 
-  - `?input={urlencoded url of image}` - Load image, generate depth map. Supports all formats the browser supports. In addition to `input`:
-    - `&depthmap={urlencoded url of depth map image}` - Bring your own depth map. In grayscale (light = near, dark = far) or [Turbo Rainbow format](https://research.google/blog/turbo-an-improved-rainbow-colormap-for-visualization/) like its used by Apples [depth-pro](https://github.com/apple/ml-depth-pro)
-    - `&expandDepthmapRadius=5` - Set the Depth Map Expansion to tweak background separation during rendering
-    - `&depthmapSize=1024` - Sets Max. Depth Map Size, only used for depth map generation.
-    - `&displayMode={full|hsbs|fsbs} - Display one image in full, or two side-by-side for VR
-- Use the bookmarklet to open images from civit.ai, unsplash.com and others in Tiefling
+### Core Components
 
-## Viewing images
+1. **Depth API** (Port 5000) - AI-powered depth map generation using DepthAnything V2
+2. **Video API** (Port 5001) - Parallax animation rendering with configurable camera movement  
+3. **Composition API** (Port 5002) - Multi-image video composition with transitions
+4. **Audio API** (Port 5003) - Professional audio mixing and final production
 
-Move your mouse to change perspective. If it feels choppy, adjust the **Render Quality** in the menu.
+## Features
 
-Press `Alt + h` to hide the controls and mouse cursor. 
+### 🎨 Visual Processing
+- **AI Depth Estimation**: GPU-accelerated DepthAnything V2 model for high-quality depth maps
+- **Parallax Animation**: Realistic 3D camera movement with configurable strength and range
+- **Multi-Scene Composition**: Seamless transitions between multiple images (fade, slide, dissolve, wipe)
+- **High Quality Output**: 4K support with customizable resolution, frame rate, and duration
 
-## VR
+### 🎵 Audio Production
+- **Intelligent Mixing**: Automatic volume balancing (voiceover 100%, music 20%, SFX controlled)
+- **Professional Features**: Fade in/out, time positioning, multi-track layering
+- **Format Support**: MP3, WAV, AAC, M4A, OGG, FLAC
+- **Audio Analysis**: Peak/RMS level detection for optimal mixing
 
-To view images in neat 3D, mirror your computer screen to your VR headset. [Virtual Desktop](https://www.vrdesktop.net/) works well. Switch to `Half SBS` or `Full SBS` in the Tiefling menu, then do the same in Virtual Desktop. Works best in fullscreen. Switch back to normal view in Virtual Desktop to adjust settings.  
+### ⚡ Performance
+- **GPU Acceleration**: CUDA support for depth generation
+- **Efficient Pipeline**: Optimized processing with temporary file management
+- **Scalable Architecture**: Microservice design for horizontal scaling
+- **Quality Control**: Configurable quality settings for speed vs. quality tradeoffs
 
-You can also drag the VR cursor from left to right on the whole image to adjust 3D Strength / IPD. 
+## Technical Stack
 
-## Options
+- **AI/ML**: DepthAnything V2 (Hugging Face Transformers), PyTorch, ONNX Runtime
+- **Video Processing**: FFmpeg, OpenCV, Three.js-inspired rendering algorithms
+- **Audio Processing**: Librosa, SciPy for analysis and FFmpeg for mixing
+- **API Framework**: Flask with RESTful endpoints
+- **Languages**: Python 3.8+
 
-- **Max. Depth Map Size** - Resolution of the depth map in its biggest dimension. Maximally as big as the image. Set to a lower value if it tales too long. 
-- **Depth Map Expansion** - Since the depth map is not perfect at edges, there will be stretchy parts. To avoid those, we can expand the depth map at edges. This doesn't affect the displayed depth map and is just used internally for rendering. 
-- **Camera Movement** - Strafe the camera on a plane, or rotate it around a point. 
-- **Render Quality** - Pixel density of the canvas.
-- **Display Mode** - Full, Half Side-by-Side or Full Side-by-Side for viewing in a VR headset
-- **3D Strength / IPD** - How much the right image in SBS view is rotated. Adjust to increase 3D effect or if it looks weird. 
+## Installation
 
-## Hosting
+### Prerequisites
+- Python 3.8 or higher
+- CUDA-capable GPU (optional, but recommended for performance)
+- FFmpeg installed and accessible in PATH
+- At least 4GB RAM (8GB+ recommended)
 
-It's (mostly) a static website, all the 3D generation happens in your browser. So, host the contents of the `public` folder yourself however you like. But give it its own domain, it's not tested to work in subfolders yet.
+### Quick Setup
+```bash
+# Clone and setup
+git clone <repository-url>
+cd parallax-studio
 
-Also there is an api.php that acts as a proxy for the catbox.moe API. Ignore it if you don't use this feature, otherwise install PHP 8+.
+# Install dependencies
+./setup.sh
 
-## Thanks to
+# Start all services
+./start_servers.sh
+```
 
-- [akbartus DepthAnything-on-Browser](https://github.com/akbartus/DepthAnything-on-Browser) for Depth Anything V2 JS version
-- Rafał Lindemanns [Depthy](https://depthy.stamina.pl/#/) for inspiration
-- [immersity.ai](https://www.immersity.ai/) for inspiration.
+### Manual Installation
+```bash
+# Create virtual environment
+python3 -m venv venv
+source venv/bin/activate
 
-## Licenses
+# Install dependencies
+pip install -r requirements.txt
 
-- Tiefling: [MIT](https://github.com/combatwombat/tiefling/blob/main/LICENSE)
-- DepthAnythingV2 small: [Apache-2.0](https://github.com/DepthAnything/Depth-Anything-V2/blob/main/LICENSE)
-- DepthAnything-on-Browser: [MIT](https://github.com/akbartus/DepthAnything-on-Browser/blob/main/LICENSE)
-- ONNX runtime: [MIT](https://github.com/microsoft/onnxruntime/blob/main/LICENSE)
-- Three.js: [MIT](https://github.com/mrdoob/three.js/blob/dev/LICENSE)
-- Alpine.js: [MIT](https://github.com/alpinejs/alpine/blob/main/LICENSE.md)
-- simplebar: [MIT](https://github.com/Grsmto/simplebar/blob/master/LICENSE)
-- Remix Icons: [Apache License](https://github.com/Remix-Design/remixicon/blob/master/License)
+# Start individual services
+python depth_api.py      # Port 5000
+python video_api.py      # Port 5001  
+python composition_api.py # Port 5002
+python audio_api.py      # Port 5003
+```
+
+## API Endpoints
+
+### Depth Generation API (Port 5000)
+- `POST /generate-depth` - Generate depth map from image
+- `POST /generate-depth-json` - Get depth map as base64 JSON
+- `GET /health` - Service health check
+
+### Video Generation API (Port 5001)
+- `POST /generate-video` - Create parallax video from image
+- `POST /generate-video-with-depth` - Create video with custom depth map
+- `POST /preview-depth` - Preview depth map without creating video
+- `GET /health` - Service health check
+
+### Composition API (Port 5002)
+- `POST /compose` - Multi-image composition with inline config
+- `POST /compose-from-config` - Composition from JSON config file
+- `GET /example-config` - Get example configuration template
+- `GET /health` - Service health check
+
+### Audio API (Port 5003)
+- `POST /complete-production` - **End-to-end production pipeline**
+- `POST /mix-audio` - Mix multiple audio tracks
+- `POST /add-audio-to-video` - Add audio to existing video
+- `POST /analyze-audio` - Analyze audio levels and duration
+- `GET /example-audio-config` - Get example audio configuration
+- `GET /health` - Service health check
+
+## Configuration
+
+### Video Settings
+```json
+{
+  "video_settings": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30
+  }
+}
+```
+
+### Parallax Parameters
+- `camera_movement`: Movement strength (0.05-0.2, default: 0.1)
+- `movement_range`: Movement extent (0.1-0.3, default: 0.17)  
+- `duration`: Animation length in seconds (default: 3.0)
+
+### Audio Configuration
+```json
+{
+  "audio_tracks": [
+    {
+      "track_type": "voiceover|music|sfx",
+      "start_time": 0.0,
+      "volume": 1.0,
+      "fade_in": 0.5,
+      "fade_out": 0.5
+    }
+  ]
+}
+```
+
+## Usage Examples
+
+### Simple Parallax Video
+```bash
+curl -X POST http://localhost:5001/generate-video \
+  -F "image=@photo.jpg" \
+  -F "camera_movement=0.12" \
+  -F "duration=4.0"
+```
+
+### Multi-Scene Composition
+```bash
+curl -X POST http://localhost:5002/compose \
+  -F "image_0=@scene1.jpg" \
+  -F "image_1=@scene2.jpg" \
+  -F "config={\"images\":[{\"duration\":3,\"transition_type\":\"fade\"}]}"
+```
+
+### Complete Production
+```bash
+curl -X POST http://localhost:5003/complete-production \
+  -F "image_0=@scene1.jpg" \
+  -F "audio_0=@narration.wav" \
+  -F "config=@production_config.json"
+```
+
+## Testing
+
+### Run Individual Tests
+```bash
+python test_depth_api.py        # Test depth generation
+python test_video_api.py        # Test video creation  
+python test_composition.py      # Test multi-scene composition
+python test_audio.py           # Test audio mixing
+```
+
+### Complete Pipeline Test
+```bash
+python test_complete_production.py  # End-to-end test
+```
+
+## Performance Optimization
+
+### GPU Utilization
+- Ensure CUDA is properly installed for GPU acceleration
+- Monitor GPU memory usage during depth generation
+- Adjust `depth_size` parameter to balance quality vs. speed
+
+### Quality Settings
+- **Fast Preview**: 720p, 24fps, depth_size=512
+- **Standard Quality**: 1080p, 30fps, depth_size=1024  
+- **High Quality**: 4K, 60fps, depth_size=1024+
+
+### Resource Management
+- Each API service uses temporary directories that are cleaned up automatically
+- Monitor disk space in `/tmp/parallax_studio_*` directories
+- Scale horizontally by running multiple instances with load balancing
+
+## Troubleshooting
+
+### Common Issues
+
+1. **GPU Not Detected**
+   ```bash
+   python -c "import torch; print(torch.cuda.is_available())"
+   ```
+
+2. **FFmpeg Not Found**
+   ```bash
+   # Ubuntu/Debian
+   sudo apt install ffmpeg
+   
+   # macOS
+   brew install ffmpeg
+   ```
+
+3. **Memory Issues**
+   - Reduce `depth_size` parameter
+   - Lower video resolution
+   - Process fewer images simultaneously
+
+4. **Audio Sync Issues**
+   - Ensure `total_duration` matches video length
+   - Check audio file formats are supported
+   - Verify audio sample rates are consistent
+
+### Log Analysis
+Each service provides detailed logging for debugging:
+- Check console output for processing stages
+- Monitor HTTP response codes and error messages
+- Use health endpoints to verify service connectivity
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Add comprehensive tests for new functionality
+4. Ensure all existing tests pass
+5. Submit a pull request with detailed description
+
+## License
+
+MIT License - see LICENSE file for details.
+
+## Credits
+
+- **DepthAnything V2**: Microsoft Research depth estimation model
+- **Three.js**: Inspiration for 3D rendering algorithms  
+- **FFmpeg**: Video and audio processing
+- **Tiefling**: Original browser-based 3D image viewer that inspired this project
+
+## Support
+
+For issues, questions, or feature requests, please open an issue on GitHub with:
+- System specifications (OS, GPU, Python version)
+- Error logs and console output
+- Sample input files (if applicable)
+- Expected vs. actual behavior
