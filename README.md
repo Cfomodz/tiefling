@@ -1,6 +1,16 @@
-# Parallax Studio Pro
+<div align="center">
+  
+# Parallax Studio Pro (Free Open Source Parallax API)  
+![GitHub License](https://img.shields.io/github/license/Cfomodz/parallax-studio-pro)
+![GitHub Sponsors](https://img.shields.io/github/sponsors/Cfomodz)
+![Discord](https://img.shields.io/discord/425182625032962049)
 
-A complete backend API system for converting 2D images into cinematic 3D parallax videos with professional audio mixing.
+
+<img src="https://github.com/user-attachments/assets/3b97022a-5a0a-4fe9-80d2-fd0e61180b86" alt="parallax image generator" width="400"/>
+
+### A backend API for converting still images into parallax videos with audio mixing.
+
+</div>
 
 ## Overview
 
