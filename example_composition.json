@@ -1,0 +1,42 @@
+{
+  "video_settings": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30
+  },
+  "images": [
+    {
+      "image_path": "scene1.jpg",
+      "duration": 3.5,
+      "camera_movement": 0.12,
+      "movement_range": 0.18,
+      "transition_type": "fade",
+      "transition_duration": 0.8
+    },
+    {
+      "image_path": "scene2.jpg",
+      "depth_path": "scene2_depth.png",
+      "duration": 4.0,
+      "camera_movement": 0.08,
+      "movement_range": 0.15,
+      "transition_type": "slide_left",
+      "transition_duration": 1.0
+    },
+    {
+      "image_path": "scene3.jpg",
+      "duration": 3.0,
+      "camera_movement": 0.15,
+      "movement_range": 0.22,
+      "transition_type": "dissolve",
+      "transition_duration": 0.6
+    },
+    {
+      "image_path": "scene4.jpg",
+      "duration": 2.5,
+      "camera_movement": 0.1,
+      "movement_range": 0.17,
+      "transition_type": "wipe_left",
+      "transition_duration": 0.7
+    }
+  ]
+}
